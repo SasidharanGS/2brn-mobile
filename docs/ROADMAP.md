@@ -8,24 +8,30 @@
 
 ---
 
-## Phase 0 — Foundation & tooling  🟦
+## Phase 0 — Foundation & tooling  ✅
 Exit: app scaffolds, type-checks, lints, and an empty test passes; docs + CI in place.
 - [x] Design docs (`DESIGN.md`, `ROADMAP.md`, `DECISIONS.md`)
-- [ ] `git init` the `2brn_mobile` repo (local only)
-- [ ] Expo + TypeScript scaffold (expo-router, NativeWind, TanStack Query)
-- [ ] ESLint + Prettier + `tsc` config; `.nvmrc` (Node 22)
-- [ ] jest-expo test runner; one passing smoke test
-- [ ] GitHub Actions CI (typecheck + lint + test)
-- [ ] Repo `README.md`, `LICENSE` (MIT), `.gitignore`
+- [x] `git init` the `2brn_mobile` repo (local only)
+- [x] Expo (SDK 56) + TypeScript scaffold (expo-router, NativeWind, TanStack Query)
+- [x] ESLint + Prettier + `tsc` config; `.nvmrc` (Node 22)
+- [x] jest-expo test runner; one passing smoke test (date utils)
+- [x] GitHub Actions CI (typecheck + lint + test)
+- [x] Repo `README.md`, `LICENSE` (MIT), `.gitignore`
 
-## Phase 1 — Connection layer + daemon bridge  ⬜
+> Scaffold note: `create-expo-app`'s bootstrap/template fetch is blocked on this
+> network, so the project was assembled via `npm install expo` + `npx expo install`
+> (same coherent SDK 56 dependency set). TypeScript installed is 6.0.3, so test
+> files import globals from `@jest/globals` rather than relying on ambient types.
+
+## Phase 1 — Connection layer + daemon bridge  🟦
 Exit: phone can pair with the daemon and make an authed call; daemon changes tested & green.
-- [ ] Daemon branch `feat/mobile-bridge` off `improvements`
-- [ ] Daemon: `lan_access` config + `0.0.0.0` bind + `GET /connection-info` + tests
-- [ ] Daemon: `POST /ingest/note` + `GET /ingest/notes` + `shared_notes` table + tests
-- [ ] Daemon: surface `lan_access` in `/settings` + tests
+- [x] Daemon branch `feat/mobile-bridge` off `improvements`
+- [x] Daemon: `lan_access` config + `0.0.0.0` bind + `GET /connection-info` + tests
+- [x] Daemon: `POST /ingest/note` + `GET /ingest/notes` + `shared_notes` table + tests
+- [x] Daemon: surface `lan_access` in `/settings` + tests (full suite 330✓/1 skip; pyright 0)
 - [ ] Desktop UI: "Connect a phone" panel (LAN toggle + QR) *(or terminal QR helper + manual entry)*
-- [ ] Mobile: `api/types.ts` (ported + ingest types), `api/client.ts` (bearer fetch)
+- [x] Mobile: `api/types.ts` (ported + ingest types)
+- [ ] Mobile: `api/client.ts` (bearer fetch) + `chatStream.ts`
 - [ ] Mobile: `ConnectionContext` + secure-store persistence
 - [ ] Mobile: Pair screen (QR scan + manual entry) + payload parse/validate + tests
 

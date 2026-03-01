@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "2brn",
+    "slug": "twobrn-mobile",
+    "scheme": "twobrn",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.twobrn.mobile",
+      "edgeToEdgeEnabled": true,
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "2brn uses the camera to scan the pairing QR code shown by your desktop app."
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": ["text/*"]
+        }
+      ]
+    ]
+  }
+}
