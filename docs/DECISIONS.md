@@ -39,9 +39,16 @@ additive-only, never-push guardrails.
 - **Streaming chat:** use `expo/fetch` (WHATWG streaming) with a buffered fallback,
   because RN's global `fetch` has no streaming body. Parser logic ported verbatim from
   the desktop client and unit-tested.
-- **Pairing payload:** deep link `2brn://pair?u=<base64url(url)>&t=<token>`; token kept
-  only in expo-secure-store (Android Keystore). Plain-HTTP-over-LAN in v1; the bearer
-  token is the gate; TLS/relay documented as future work.
+- **Pairing payload:** deep link `twobrn://pair?u=<encodeURIComponent(url)>&t=<token>`.
+  Scheme is `twobrn` (URI schemes can't start with a digit); URL is URI-encoded, not
+  base64, so it decodes with the built-in `decodeURIComponent` (no atob polyfill).
+  Token kept only in expo-secure-store (Android Keystore). Plain-HTTP-over-LAN in v1;
+  the bearer token is the gate; TLS/relay documented as future work.
+- **Scaffold method:** `create-expo-app`'s bootstrap/template fetch is blocked on this
+  network, so the project was assembled with `npm install expo` + `npx expo install`
+  (identical coherent SDK 56 set). TypeScript resolved to 6.0.3, which doesn't ambient-
+  load `@types/jest`, so test files import globals from `@jest/globals` and use standard
+  matchers (also avoids RTL matcher-typing friction).
 - **Capture ingestion shape:** shared content is both embedded into ChromaDB
   `note_memories` (so it's chat-searchable, like Joplin notes) **and** persisted to a
   new additive `shared_notes` SQLite table (so saved items survive a Chroma rebuild and
