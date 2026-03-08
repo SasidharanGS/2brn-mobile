@@ -60,8 +60,24 @@ additive-only, never-push guardrails.
   when feasible; a daemon `GET /connection-info` plus a tiny terminal QR helper and
   manual URL+token entry guarantee pairing works regardless.
 
+- **Render validation without RTL:** component **render** tests are deferred —
+  `@testing-library/react-native` v14.0.0's `render()` returns an empty object on this
+  React 19.2 / RN 0.85 / jest-expo stack, and v13 has incompatible peers (a tooling
+  bug, not app code). Instead, the 30 logic tests cover the API client, SSE parser,
+  pairing, mock client, and date math, and `expo export --platform web` bundles every
+  screen/route through Metro (compiling NativeWind) as the render/build proof. Revisit
+  when RTL stabilizes on RN 0.85.
+- **Theming:** dark/light via NativeWind `dark:` variants over Tailwind's slate scale +
+  a brand `primary`, following the system appearance (no manual toggle in v1).
+
 ## Deferrals (documented, not built in v1)
 
+- Component **render** tests (RTL v14 incompatibility — see above; covered by logic
+  tests + `expo export`).
+- Desktop "Connect a phone" QR panel (the terminal helper `python -m brn_daemon.pair`
+  plus manual entry already make pairing work; the React panel is a small follow-up).
+- A custom launcher icon + haptics (Expo's default icon is used; `BUILD.md` shows how
+  to add `assets/icon.png`).
 - Plugins management UI (config-heavy, low mobile value).
 - Editing provider settings / API keys on mobile.
 - Off-LAN access (relay / Tailscale / TLS + cert pinning).
