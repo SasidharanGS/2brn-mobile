@@ -19,21 +19,24 @@ Android SDK (see [Build](#build-an-apk)).
 
 ---
 
-## ⚠️ Branch & location map (read carefully — two repos, two branches, both local-only)
+## ⚠️ Branch & location map (read carefully — two repos side by side)
 
-Nothing has been pushed to any remote. To continue this work you need **both** of these:
+The mobile app is still **local-only**; the daemon support has since been **merged to
+`main` and pushed**. To continue this work you need **both** of these:
 
 | Piece | Repo / path | Branch | Pushed? |
 |---|---|---|---|
-| **Mobile app** (this repo) | `2brn_new/2brn_mobile/` (its own git repo) | **`master`** | ❌ no remote configured |
-| **Daemon support** (LAN access, ingest, pairing) | `2brn_new/2brn/` (the desktop repo) | **`feat/mobile-bridge`** (branched from `improvements`) | ❌ local only |
-| Desktop app baseline | `2brn_new/2brn/` | `improvements` (remote default is `main`) | — |
+| **Mobile app** (this repo) | `2brn/2brn_mobile/` (its own git repo) | **`master`** | ❌ no remote configured |
+| **Daemon support** (LAN access, ingest, pairing) | `2brn/2brn_desktop/` (the desktop repo) | merged into **`main`** | ✅ on `origin/main` |
+| Desktop app baseline | `2brn/2brn_desktop/` | **`main`** (GitHub: `SasidharanGS/2brn`) | ✅ |
 
-- `2brn_new/` is **not** a git repo — it's a wrapper folder holding both repos side by side.
-- The mobile app talks to the daemon over HTTP; the daemon changes on `feat/mobile-bridge`
-  are what make a phone able to reach it. **You need that branch**, not just `improvements`.
+- `2brn/` is **not** a git repo — it's a wrapper folder holding `2brn_desktop/` and
+  `2brn_mobile/` side by side.
+- The mobile app talks to the daemon over HTTP; the daemon changes that let a phone reach
+  it (LAN access, ingest, pairing) are now on `main`.
 - **Hard rule from the owner: do NOT `git push` or open PRs.** Commit locally; the owner
-  pushes/reviews manually. (The owner will share/push both branches to you.)
+  pushes/reviews manually. (The owner has already pushed the desktop side; the mobile repo
+  still has no remote.)
 
 ### Commits on each branch
 ```
@@ -45,7 +48,7 @@ Nothing has been pushed to any remote. To continue this work you need **both** o
   chore: scaffold Expo (SDK 56) app + tooling
   docs: mobile companion design, roadmap, and decision log
 
-2brn @ feat/mobile-bridge   (ahead of improvements by 2)
+2brn_desktop @ main   (feat/mobile-bridge merged in; pushed to origin/main)
   feat(daemon): terminal pairing helper for the mobile companion
   feat(daemon): opt-in LAN access + mobile ingest bridge
 ```
@@ -54,7 +57,7 @@ Nothing has been pushed to any remote. To continue this work you need **both** o
 
 ## Status (verified 2026-06-08)
 
-| Check | Mobile (`2brn_mobile`) | Daemon (`2brn` @ feat/mobile-bridge) |
+| Check | Mobile (`2brn_mobile`) | Daemon (`2brn_desktop` @ main) |
 |---|---|---|
 | Types | `tsc --noEmit` ✅ | `pyright` ✅ 0 errors / 0 warnings |
 | Lint | `eslint` ✅ | `ruff` ✅ |
@@ -70,7 +73,7 @@ daemon behaves exactly as before.
 
 ```bash
 # --- Mobile app ---
-cd 2brn_new/2brn_mobile
+cd 2brn/2brn_mobile
 nvm use            # Node 22 (see .nvmrc). If `node`/`npx` misbehave in a tool shell,
                    # prepend ~/.nvm/versions/node/v22.*/bin to PATH and `unset -f node npm npx`.
 npm install
@@ -85,9 +88,8 @@ EXPO_PUBLIC_MOCK=1 npm run web
 ```
 
 ```bash
-# --- Daemon support (other repo, other branch) ---
-cd 2brn_new/2brn          # the desktop repo
-git checkout feat/mobile-bridge
+# --- Daemon support (other repo; work is on main) ---
+cd 2brn/2brn_desktop          # the desktop repo
 cd daemon
 UV_SYSTEM_CERTS=1 uv run ruff check src/
 TZ=UTC UV_SYSTEM_CERTS=1 uv run --extra dev pytest tests/test_mobile_bridge.py -v
@@ -144,8 +146,9 @@ dark/light theming; offline/empty/error states; daemon bridge + tests; CI workfl
 1. **Produce the APK** — no Android SDK on the build machine. Use `expo prebuild` + Gradle,
    or `eas build -p android --profile preview` (needs an Expo login). See
    [`docs/BUILD.md`](docs/BUILD.md). `eas.json` is already set up.
-2. **Push/share both branches** (`2brn_mobile@master`, `2brn@feat/mobile-bridge`) — owner
-   does this manually. Decide monorepo vs. a separate GitHub repo for the mobile app.
+2. **Push/share the mobile repo** (`2brn_mobile@master` — still no remote) — owner does this
+   manually. Decide monorepo vs. a separate GitHub repo for the mobile app. (The desktop side
+   is already merged to `main` and pushed.)
 3. **Desktop "Connect a phone" QR panel** — optional; the terminal helper + manual entry
    already work. Would add a QR (e.g. `qrcode.react`) to the desktop UI Settings.
 4. **Component render tests** — deferred: `@testing-library/react-native` v14.0.0 `render()`
