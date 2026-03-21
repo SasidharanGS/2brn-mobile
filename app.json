@@ -6,16 +6,23 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
     "newArchEnabled": true,
     "assetBundlePatterns": ["**/*"],
     "android": {
       "package": "com.twobrn.mobile",
-      "edgeToEdgeEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#4f46e5"
+      },
       "permissions": ["android.permission.CAMERA"]
     },
     "ios": {
       "bundleIdentifier": "com.twobrn.mobile",
       "supportsTablet": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
