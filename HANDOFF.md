@@ -3,8 +3,9 @@
 > Read this first. It orients you (human or agent) on **what exists, where it lives,
 > what branch it's on, what's verified, and what's left**. Deep detail is in
 > [`docs/DESIGN.md`](docs/DESIGN.md), [`docs/ROADMAP.md`](docs/ROADMAP.md),
-> [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/BUILD.md`](docs/BUILD.md), and
-> [`docs/PAIRING.md`](docs/PAIRING.md).
+> [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/BUILD.md`](docs/BUILD.md),
+> [`docs/PAIRING.md`](docs/PAIRING.md), and
+> [`docs/PARITY.md`](docs/PARITY.md) (desktop↔mobile feature parity + full-functionality strategy).
 
 ## TL;DR
 
