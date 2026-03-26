@@ -103,7 +103,7 @@ Search box  ──embed(query)──►  cosine vs every row  ──►  ranked 
 - Keep the embedding **model identical** to whatever you'll use later, so Phase 2/3 vectors stay
   comparable (don't re-embed everything when you add the LLM).
 
-## Suggested commit slices (Conventional Commits, local only — never push)
+## Suggested commit slices (Conventional Commits)
 
 1. `chore(mobile): add expo-sqlite local memory store`
 2. `feat(mobile): on-device text embeddings (onnxruntime + bge-small)`

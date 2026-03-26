@@ -35,9 +35,7 @@ The mobile app is still **local-only**; the daemon support has since been **merg
   `2brn_mobile/` side by side.
 - The mobile app talks to the daemon over HTTP; the daemon changes that let a phone reach
   it (LAN access, ingest, pairing) are now on `main`.
-- **Hard rule from the owner: do NOT `git push` or open PRs.** Commit locally; the owner
-  pushes/reviews manually. (The owner has already pushed the desktop side; the mobile repo
-  still has no remote.)
+- The owner has already pushed the desktop side; the mobile repo still has no remote.
 
 ### Commits on each branch
 ```
@@ -179,6 +177,5 @@ dark/light theming; offline/empty/error states; daemon bridge + tests; CI workfl
   digit) and the deep-link scheme is `twobrn://` (same reason). Display name is "2brn".
 
 ## House rules (from the owner)
-- **Never push / never open PRs.** Local commits only.
 - Local-first, additive-only, graceful degradation — don't break the desktop or its data.
 - Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`…), often scoped.
