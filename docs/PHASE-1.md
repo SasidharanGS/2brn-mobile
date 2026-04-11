@@ -58,8 +58,10 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
 **Goal:** an image becomes searchable text, fully offline.
 
 **Pieces**
-1. `src/ml/ocr.ts` — the model choice (`OCR_ENGLISH`) + a **pure** `joinOcrText(detections)` that orders
-   the detected boxes into reading order and joins them. Unit-tested (no native dep — type-only import).
+1. `src/ml/ocrText.ts` — a **pure** `joinOcrText(detections)` that orders the detected boxes into reading
+   order (group into lines, then left-to-right) and joins them. Unit-tested, native-free. The model choice
+   (`OCR_ENGLISH`) lives in `src/ml/ocr.ts` (the only file importing the native toolkit), mirroring the
+   `similarity.ts` (pure) / `embeddings.ts` (model) split from Phase 0.
 2. `src/ml/OcrContext.tsx` — a provider that **lazy-loads** the OCR model (it's large; don't download it
    until the user actually uses image capture) and exposes `extractText(uri): Promise<string>`, plus
    `isReady` / `downloadProgress` / `error`. Mirrors `EmbeddingsContext`.
@@ -68,13 +70,23 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
    text. Saving then reuses the existing `embed → insertMemory` path (`source: 'mobile-image'`).
 4. `app/memories.tsx` — a **"From image"** button (via `expo-image-picker`) so you can pick a screenshot
    from the gallery and capture its text without the share sheet (also the easiest way to verify).
-5. A bundled `assets/ocr-selftest.png` (known text) + a dev-only self-test in `_layout.tsx` that OCRs it
-   and logs the result — same money-shot pattern as Phase 0's self-tests.
-
 **Check (definition of done)**
-- ✅ Pick/share an image of some text → its text lands in the note, saves, and is found by a meaning
-  search — **network off**. Dev self-test logs `[2brn-ocr-selftest] text="…"` matching the known image.
-- ✅ `npm run typecheck` / `lint` / `test` green; runs on `Pixel_8` + OnePlus 15.
+- ✅ `npm run typecheck` / `lint` / `test` green (47 tests; `joinOcrText` reading-order unit tests added).
+- ✅ Builds + runs on the `Pixel_8` emulator; the OCR integration is **stable at rest** (lazy-loaded, so
+  Phase 0 embeddings/search are untouched and the app doesn't crash on launch); the **"From image"**
+  button and the share-image thumbnail/OCR-status UI render on-device.
+- ⏳ **OCR extraction itself is pending real-device (OnePlus 15) verification** — see the caveat below.
+
+> **Emulator caveat (Apple Silicon) — why OCR can't be verified on the `Pixel_8` emulator.** Calling the
+> executorch OCR `forward()` crashes the app with **`SIGILL` (illegal instruction)** in the recognizer
+> (`rnexecutorch::models::ocr::utils::softmax` → `Recognizer::postprocess`). Root cause: the Android
+> emulator on Apple Silicon **falsely advertises SVE** in `/proc/cpuinfo` (`CPU implementer 0x61` = Apple,
+> which has **no SVE hardware**; flags list `sve2`/`svei8mm`/`sve2p1`). The library's SVE codepath then
+> executes an instruction the host CPU lacks → illegal opcode. Phase 0 embeddings are **FP32/NEON**, so
+> they're unaffected — which is exactly why search works but OCR doesn't. The OCR models download fine
+> (`detector-craft`, `recognizer-crnn.en` `.pte` cached on-device); only inference faults. A **real
+> ARMv9 phone (the OnePlus 15) does not lie about SVE**, so OCR is expected to run there. _Verify on the
+> OnePlus 15 before treating Branch A as fully done._
 
 ### Branch B — `feat/voice-capture` (after A)
 

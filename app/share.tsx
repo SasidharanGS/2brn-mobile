@@ -2,8 +2,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useShareIntentContext } from 'expo-share-intent'
-import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { queryKeys } from '@/api/queryKeys'
@@ -11,6 +11,7 @@ import { Button, Card } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { insertMemory } from '@/db/local'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
+import { useOcr } from '@/ml/OcrContext'
 
 export default function ShareScreen() {
   const router = useRouter()
@@ -18,23 +19,56 @@ export default function ShareScreen() {
   const qc = useQueryClient()
   const { state } = useConnection()
   const { embed, isReady } = useEmbeddings()
+  const { extractText, downloadProgress } = useOcr()
   const { shareIntent, hasShareIntent, resetShareIntent } = useShareIntentContext()
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
   const [url, setUrl] = useState('')
+  const [image, setImage] = useState<string | null>(null)
+  const [ocrBusy, setOcrBusy] = useState(false)
+  const [ocrFailed, setOcrFailed] = useState(false)
   const [done, setDone] = useState(false)
   const [seededFor, setSeededFor] = useState<string | null>(null)
+
+  // A shared image (e.g. a screenshot) arrives as a file with an image/* mime type.
+  const sharedImage = hasShareIntent
+    ? (shareIntent.files?.find((f) => f.mimeType?.startsWith('image/'))?.path ?? null)
+    : null
 
   // Seed the form from an incoming share intent. This is render-phase state
   // adjustment (React's "adjusting state when an input changes" pattern), not an
   // effect — it re-seeds only when a genuinely new intent arrives.
-  const intentKey = hasShareIntent ? `${shareIntent.text ?? ''}|${shareIntent.webUrl ?? ''}` : null
+  const intentKey = hasShareIntent ? `${shareIntent.text ?? ''}|${shareIntent.webUrl ?? ''}|${sharedImage ?? ''}` : null
   if (intentKey && intentKey !== seededFor) {
     setSeededFor(intentKey)
     setText(shareIntent.text ?? shareIntent.webUrl ?? '')
     setUrl(shareIntent.webUrl ?? '')
     setTitle(shareIntent.meta?.title ?? '')
+    setImage(sharedImage)
+    setOcrFailed(false)
   }
+
+  // When an image comes in, extract its text on-device and drop it into the note
+  // (only if the share didn't already include text). The result stays editable.
+  useEffect(() => {
+    if (!image) return
+    let cancelled = false
+    void (async () => {
+      setOcrBusy(true)
+      setOcrFailed(false)
+      try {
+        const extracted = await extractText(image)
+        if (!cancelled && extracted.trim()) setText((prev) => (prev.trim() ? prev : extracted))
+      } catch {
+        if (!cancelled) setOcrFailed(true)
+      } finally {
+        if (!cancelled) setOcrBusy(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [image, extractText])
 
   const client = state.status === 'paired' ? state.client : null
 
@@ -49,7 +83,7 @@ export default function ShareScreen() {
         text: trimmed,
         title: titleVal ?? null,
         sourceUrl: urlVal ?? null,
-        source: hasShareIntent ? 'mobile-share' : 'mobile',
+        source: image ? 'mobile-image' : hasShareIntent ? 'mobile-share' : 'mobile',
         embedding,
       })
       // 2) Best-effort sync to the desktop when paired (companion behavior).
@@ -105,6 +139,24 @@ export default function ShareScreen() {
           </View>
         ) : (
           <Card>
+            {image ? (
+              <View className="mb-3">
+                <Image
+                  source={{ uri: image }}
+                  style={{ width: '100%', height: 160, borderRadius: 8 }}
+                  resizeMode="cover"
+                />
+                {ocrBusy ? (
+                  <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
+                    Reading text from image…{downloadProgress < 1 ? ` ${Math.round(downloadProgress * 100)}%` : ''}
+                  </Text>
+                ) : ocrFailed ? (
+                  <Text className="mt-2 text-center text-xs text-amber-500">
+                    Couldn&apos;t read text from this image — type your note below.
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Title (optional)
             </Text>
