@@ -88,14 +88,35 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
 > ARMv9 phone (the OnePlus 15) does not lie about SVE**, so OCR is expected to run there. _Verify on the
 > OnePlus 15 before treating Branch A as fully done._
 
-### Branch B — `feat/voice-capture` (after A)
+### Branch B — `feat/voice-capture`
 
 **Goal:** a spoken note becomes searchable text, fully offline.
 
-**Pieces (sketch — detailed when A merges):** mic permission + an audio recorder (expo-audio), an
-`SttContext` mirroring the OCR/embeddings providers (`useSpeechToText`, lazy-loaded), a record→transcribe
-UI on `memories.tsx`, `source: 'mobile-voice'`. Same `embed → insertMemory → search` tail. Self-test
-transcribes a bundled short clip.
+**Pieces**
+1. `src/ml/audioWaveform.ts` — pure, native-free, unit-tested helpers: `concatFloat32` (join the mic
+   stream's PCM chunks), `maxAbsAmplitude` (silence detection), `durationSeconds`, and the `STT_SAMPLE_RATE`
+   (16 kHz) constant. Mirrors `ocrText.ts`.
+2. `src/ml/stt.ts` — the model choice (`WHISPER_TINY_EN`).
+3. `src/ml/SttContext.tsx` — a provider mirroring `OcrContext`: **lazy-loads** Whisper (preventLoad until
+   first use) and exposes `transcribe(waveform): Promise<string>` + isReady/isLoading/downloadProgress/error.
+4. `app/memories.tsx` — a **Record / Stop** button. Recording uses **expo-audio**'s `useAudioStream`
+   (float32 PCM @ 16 kHz mono) with mic permission via `requestRecordingPermissionsAsync()`; on stop it
+   assembles the waveform, skips if silent, else transcribes on-device into the draft for review. Saving
+   reuses the existing `embed → insertMemory` path.
+
+> **Why expo-audio's PCM stream (not a recorder lib):** Whisper's `transcribe()` wants a raw 16 kHz mono
+> Float32 waveform. expo-audio's `useAudioStream` delivers exactly that (float32 PCM in [-1,1]) — official
+> Expo — so we skip both compressed-file decoding *and* a third-party native recorder (e.g.
+> `react-native-audio-api`, which would also drag in `react-native-worklets`).
+
+**Check (definition of done)**
+- ✅ typecheck / lint / test green (55 tests; the pure waveform helpers are unit-tested).
+- ✅ Builds + runs on the emulator; Record/Stop, mic permission, and the PCM capture pipeline work. The
+  **silence guard** means a silent emulator mic safely records → stops → no-ops without transcribing (so
+  no crash on the emulator).
+- ⏳ **Transcription pending OnePlus 15** — Whisper inference uses the same instruction path as OCR, so
+  it hits the same Apple-Silicon emulator SVE `SIGILL` (see the Branch A caveat above). Verify real
+  speech → text on the device.
 
 ---
 
