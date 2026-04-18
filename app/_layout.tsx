@@ -13,6 +13,7 @@ import { queryClient } from '@/api/queryClient'
 import { ConnectionProvider } from '@/connection/ConnectionContext'
 import { deleteMemory, getAllMemories, insertMemory } from '@/db/local'
 import { EmbeddingsProvider, useEmbeddings } from '@/ml/EmbeddingsContext'
+import { LlmProvider } from '@/ml/LlmContext'
 import { OcrProvider } from '@/ml/OcrContext'
 import { rankBySimilarity } from '@/ml/search'
 import { SttProvider } from '@/ml/SttContext'
@@ -76,12 +77,14 @@ export default function RootLayout() {
             <EmbeddingsProvider>
               <OcrProvider>
                 <SttProvider>
-                  <StatusBar style="auto" />
-                  <ShareIntentGate />
-                  {__DEV__ ? <SearchSelfTest /> : null}
-                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-                    <Stack.Screen name="share" options={{ presentation: 'modal' }} />
-                  </Stack>
+                  <LlmProvider>
+                    <StatusBar style="auto" />
+                    <ShareIntentGate />
+                    {__DEV__ ? <SearchSelfTest /> : null}
+                    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+                      <Stack.Screen name="share" options={{ presentation: 'modal' }} />
+                    </Stack>
+                  </LlmProvider>
                 </SttProvider>
               </OcrProvider>
             </EmbeddingsProvider>
