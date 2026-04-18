@@ -19,6 +19,8 @@ import { Button, Card } from '@/components/ui'
 import { deleteMemory, getAllMemories, insertMemory, type LocalMemory } from '@/db/local'
 import { concatFloat32, maxAbsAmplitude, STT_SAMPLE_RATE } from '@/ml/audioWaveform'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
+import { ANSWER_CONTEXT_SIZE } from '@/ml/llm'
+import { useLlm } from '@/ml/LlmContext'
 import { useOcr } from '@/ml/OcrContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { useStt } from '@/ml/SttContext'
@@ -30,6 +32,7 @@ export default function MemoriesScreen() {
   const { embed, isReady, downloadProgress } = useEmbeddings()
   const { extractText } = useOcr()
   const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
+  const { answer, isGenerating, downloadProgress: llmDownloadProgress } = useLlm()
 
   const [items, setItems] = useState<LocalMemory[]>([])
   const [draft, setDraft] = useState('')
@@ -40,6 +43,8 @@ export default function MemoriesScreen() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchHit[] | null>(null)
   const [searching, setSearching] = useState(false)
+  const [askAnswer, setAskAnswer] = useState<string | null>(null)
+  const [asking, setAsking] = useState(false)
 
   // Mic capture: expo-audio streams float32 PCM at 16 kHz; we collect the chunks
   // (the stream is stable — only re-created if these constant options change).
@@ -121,6 +126,7 @@ export default function MemoriesScreen() {
 
   const runSearch = async () => {
     const q = query.trim()
+    setAskAnswer(null)
     if (!q) {
       setResults(null)
       return
@@ -133,10 +139,27 @@ export default function MemoriesScreen() {
     }
   }
 
+  // Ask 2brn: write a grounded answer to the query from the top search hits, on-device.
+  const runAsk = async () => {
+    const q = query.trim()
+    const hits = results
+    if (!q || !hits || hits.length === 0) return
+    setAsking(true)
+    try {
+      const sources = hits.slice(0, ANSWER_CONTEXT_SIZE).map((h) => ({ text: h.memory.text, title: h.memory.title }))
+      setAskAnswer(await answer(q, sources))
+    } catch {
+      setAskAnswer("Couldn't generate an answer — the model may still be downloading. Try again in a moment.")
+    } finally {
+      setAsking(false)
+    }
+  }
+
   const remove = async (id: number) => {
     await deleteMemory(id)
     setResults(null)
     setQuery('')
+    setAskAnswer(null)
     await reload()
   }
 
@@ -224,12 +247,45 @@ export default function MemoriesScreen() {
               onPress={() => {
                 setQuery('')
                 setResults(null)
+                setAskAnswer(null)
               }}
             >
               <Ionicons name="close-circle" size={16} color="#94a3b8" />
             </Pressable>
           ) : null}
         </View>
+
+        {results && results.length > 0 && !askAnswer && !asking ? (
+          <Button
+            label="✨ Ask 2brn about this"
+            variant="secondary"
+            className="mb-3"
+            onPress={() => void runAsk()}
+          />
+        ) : null}
+
+        {asking || askAnswer ? (
+          <Card className="mb-3">
+            <View className="mb-1 flex-row items-center">
+              <Ionicons name="sparkles" size={14} color="#6366f1" />
+              <Text className="ml-1 text-xs font-semibold uppercase tracking-wider text-primary">Answer</Text>
+            </View>
+            {asking ? (
+              <Text className="text-sm text-slate-400 dark:text-slate-500">
+                {isGenerating
+                  ? 'Thinking…'
+                  : `Loading the on-device model…${llmDownloadProgress < 1 ? ` ${Math.round(llmDownloadProgress * 100)}%` : ''}`}
+              </Text>
+            ) : (
+              <View>
+                <Text className="text-sm text-slate-800 dark:text-slate-200">{askAnswer}</Text>
+                <Text className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+                  Answered on-device from your notes below.
+                </Text>
+              </View>
+            )}
+          </Card>
+        ) : null}
 
         {searching ? <ActivityIndicator className="my-4" /> : null}
 
