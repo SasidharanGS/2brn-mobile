@@ -147,10 +147,10 @@ export default function PairScreen() {
         {error ? <Text className="mt-4 text-center text-sm text-red-500">{error}</Text> : null}
 
         <Text
-          onPress={() => router.push('/memories')}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/memories'))}
           className="mt-6 text-center text-sm font-medium text-primary"
         >
-          Use on this phone without a desktop →
+          Skip — use 2brn on this phone
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

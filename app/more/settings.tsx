@@ -45,7 +45,7 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: async () => {
           await unpair()
-          router.replace('/pair')
+          router.replace('/memories')
         },
       },
     ])
