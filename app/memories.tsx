@@ -171,15 +171,30 @@ export default function MemoriesScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-slate-50 dark:bg-slate-950"
     >
-      <View style={{ paddingTop: insets.top + 8 }} className="flex-row items-center px-2 pb-2">
+      <View
+        style={{ paddingTop: insets.top + 8 }}
+        className="flex-row items-center justify-between px-3 pb-2"
+      >
+        <View className="flex-row items-center">
+          {router.canGoBack() ? (
+            <Pressable
+              accessibilityLabel="Back"
+              onPress={() => router.back()}
+              className="mr-1 h-9 w-9 items-center justify-center"
+            >
+              <Ionicons name="chevron-back" size={24} color="#94a3b8" />
+            </Pressable>
+          ) : null}
+          <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">On this phone</Text>
+        </View>
         <Pressable
-          accessibilityLabel="Back"
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/pair'))}
-          className="h-9 w-9 items-center justify-center"
+          accessibilityLabel="Connect a desktop"
+          onPress={() => router.push('/pair')}
+          className="flex-row items-center rounded-full px-3 py-1.5"
         >
-          <Ionicons name="chevron-back" size={24} color="#94a3b8" />
+          <Ionicons name="desktop-outline" size={15} color="#6366f1" />
+          <Text className="ml-1.5 text-sm font-medium text-primary">Connect</Text>
         </Pressable>
-        <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">On this phone</Text>
       </View>
 
       <ScrollView
