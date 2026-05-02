@@ -4,7 +4,7 @@ import type { LocalMemory } from '../../db/local'
 import { rankBySimilarity } from '../search'
 
 function mem(id: number, embedding: number[] | null): LocalMemory {
-  return { id, text: `m${id}`, title: null, source: 'test', sourceUrl: null, createdAt: '', embedding }
+  return { id, text: `m${id}`, title: null, source: 'test', sourceUrl: null, createdAt: '', embedding, summary: null, tags: null }
 }
 
 describe('rankBySimilarity', () => {

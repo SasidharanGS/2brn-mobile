@@ -31,7 +31,7 @@ note context. It's a **one-constant swap** in `src/ml/llm.ts` (e.g. `LLAMA3_2_3B
 | Order | Branch | Goal | State |
 |---|---|---|---|
 | **A** | **`feat/local-llm`** | LLM engine + **ask-and-answer** over search hits. | ✅ built (this branch) |
-| B _(next)_ | `feat/llm-enrich` | On capture → auto **tag + one-line summary** (LLM enriches each saved memory). | planned |
+| **B** | **`feat/llm-enrich`** | Capture → opt-in auto **tag + one-line summary** (LLM enriches each saved memory). | ✅ built |
 
 ### Branch A — `feat/local-llm`
 
@@ -55,9 +55,30 @@ note context. It's a **one-constant swap** in `src/ml/llm.ts` (e.g. `LLAMA3_2_3B
   it hits the same Apple-Silicon emulator SVE `SIGILL` (and would first pull ~1 GB). Verify a real
   grounded answer on the device. (See the Branch A caveat in [`PHASE-1.md`](./PHASE-1.md).)
 
-## Out of scope for Phase 2
+### Branch B — `feat/llm-enrich` ✅
 
-- ❌ **Auto tag/summary on capture** → Branch B (`feat/llm-enrich`).
+**Design:** auto-enrich is **opt-in** (a toggle on the on-device home, default OFF) and runs in the
+**background** after a save — it never blocks capture, and makes the ~1 GB model download an explicit
+choice. (Default-off also keeps the Apple-Silicon emulator usable, since enrichment is the LLM path that
+SIGILLs there.)
+
+**Pieces**
+1. `src/ml/enrich.ts` — **pure** `buildEnrichMessages(text)` + a lenient `parseEnrichment(raw)` (tolerates
+   case, `#` on tags, missing labels; dedupes + caps tags). Unit-tested.
+2. `src/db/local.ts` — `summary` + `tags` columns (with a migration for older DBs) + `updateMemoryEnrichment()`.
+3. `src/ml/LlmContext.tsx` — adds `enrich(text)` (shares the lazy-load path with `answer()`).
+4. `src/ml/useAutoEnrich.ts` — best-effort hook: if enabled, summarize + tag a freshly saved memory and store it.
+5. `src/settings/prefs.ts` — the persisted opt-in flag.
+6. `app/memories.tsx` + `app/share.tsx` — the toggle, firing enrich after each capture, and rendering the
+   summary (italic) + tag chips on memory cards.
+
+**Check (definition of done)**
+- ✅ typecheck / lint / test green (67 tests; the enrich prompt + parser are unit-tested).
+- ✅ Verified on the emulator: the toggle renders (default off) + persists; saving with it off works with
+  no crash; the enriched card (summary + #tags) renders correctly (seeded one sample row to confirm the UI).
+- ⏳ **Enrichment generation pending OnePlus 15** — same Apple-Silicon SVE caveat as the rest of the LLM.
+
+## Out of scope for Phase 2
 - ❌ **Multi-turn chat / conversation memory** → `generate()` is stateless on purpose (one question, one
   grounded answer); a chat surface can come later if wanted.
 - ❌ **Two-way desktop sync** → Phase 3.
