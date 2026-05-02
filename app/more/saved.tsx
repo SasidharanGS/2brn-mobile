@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { Alert, Linking, Pressable, Text, View } from 'react-native'
+import { Alert, Pressable, Text, View } from 'react-native'
 
 import { queryKeys } from '@/api/queryKeys'
 import { Header } from '@/components/Header'
@@ -11,6 +11,7 @@ import { Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useSharedNotes } from '@/hooks/queries'
 import { prettyTime } from '@/utils/date'
+import { isHttpUrl, openExternalUrl } from '@/utils/url'
 
 export default function SavedScreen() {
   const api = useApi()
@@ -61,13 +62,20 @@ export default function SavedScreen() {
                 {n.text}
               </Text>
               {n.source_url ? (
-                <Text
-                  onPress={() => void Linking.openURL(n.source_url as string)}
-                  numberOfLines={1}
-                  className="mt-1 text-xs text-primary"
-                >
-                  {n.source_url}
-                </Text>
+                isHttpUrl(n.source_url) ? (
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => void openExternalUrl(n.source_url)}
+                    numberOfLines={1}
+                    className="mt-1 text-xs text-primary"
+                  >
+                    {n.source_url}
+                  </Text>
+                ) : (
+                  <Text numberOfLines={1} className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                    {n.source_url}
+                  </Text>
+                )
               ) : null}
               <View className="mt-2 flex-row items-center justify-between">
                 <Text className="text-[11px] text-slate-400 dark:text-slate-500">
