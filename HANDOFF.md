@@ -9,58 +9,47 @@
 
 ## TL;DR
 
-A React Native (Expo) **Android companion** to the local-first **2brn** desktop app.
-The desktop keeps doing screen-capture → OCR → AI inference → RAG; the phone is a
-**secure LAN client** to the desktop daemon (chat, journal, blog, insights, timeline)
-**plus** one mobile capture source: an Android **share-sheet "Save to 2brn"**.
+A React Native (Expo) **on-device, local-first second brain** for Android. The phone runs
+its **own** pipeline — capture (note · share · image · voice) → OCR/STT → embeddings →
+SQLite → semantic search → grounded LLM answers — all on-device via
+**`react-native-executorch`** (Llama 3.2 1B, all-MiniLM-L6-v2). A 2brn **desktop** is an
+**optional** companion: pair over the LAN to also view/sync its chat, journal, blog,
+insights, and timeline. Nothing is required off-device.
 
-v1 is **feature-complete and verified** (typecheck, lint, tests, full Metro bundle all
-green). The only thing not produced here is the installable APK — this machine had no
-Android SDK (see [Build](#build-an-apk)).
+**Status:** the companion layer is complete; the on-device brain is **built through Phase 2.**
+Embeddings + search are verified on real hardware; **OCR, STT, and the LLM are pending
+physical-device verification** (they `SIGILL` on the Apple-Silicon emulator). Typecheck,
+lint, tests (67), and the Metro bundle are green. Remaining owner steps: device verification
+and a signed release build (see [Build](#build-an-apk)).
 
 ---
 
-## ⚠️ Branch & location map (read carefully — two repos side by side)
+## Branch & location map (two repos side by side)
 
-The mobile app is still **local-only**; the daemon support has since been **merged to
-`main` and pushed**. To continue this work you need **both** of these:
+The mobile app and the desktop live in **two separate GitHub repos** (the monorepo-vs-separate
+question is **resolved: separate repos**):
 
-| Piece | Repo / path | Branch | Pushed? |
+| Piece | Repo / path | Branch | Remote |
 |---|---|---|---|
-| **Mobile app** (this repo) | `2brn/2brn_mobile/` (its own git repo) | **`master`** | ❌ no remote configured |
-| **Daemon support** (LAN access, ingest, pairing) | `2brn/2brn_desktop/` (the desktop repo) | merged into **`main`** | ✅ on `origin/main` |
-| Desktop app baseline | `2brn/2brn_desktop/` | **`main`** (GitHub: `SasidharanGS/2brn`) | ✅ |
+| **Mobile app** (this repo) | `2brn/2brn_mobile/` | **`main`** | ✅ `git@github.com:SasidharanGS/2brn-mobile.git` |
+| **Desktop app + daemon** (incl. LAN access, ingest, pairing) | `2brn/2brn_desktop/` | **`main`** | ✅ `github.com/SasidharanGS/2brn` |
 
 - `2brn/` is **not** a git repo — it's a wrapper folder holding `2brn_desktop/` and
   `2brn_mobile/` side by side.
-- The mobile app talks to the daemon over HTTP; the daemon changes that let a phone reach
-  it (LAN access, ingest, pairing) are now on `main`.
-- The owner has already pushed the desktop side; the mobile repo still has no remote.
-
-### Commits on each branch
-```
-2brn_mobile @ master
-  test(mobile): mock-client suite; docs: build + pairing guides, eas.json
-  feat(mobile): blog, timeline, instructions, saved, settings, and share-to-2brn
-  feat(mobile): navigation, theme, shared components, and core screens
-  feat(mobile): connection layer — API client, SSE chat, pairing, secure storage
-  chore: scaffold Expo (SDK 56) app + tooling
-  docs: mobile companion design, roadmap, and decision log
-
-2brn_desktop @ main   (feat/mobile-bridge merged in; pushed to origin/main)
-  feat(daemon): terminal pairing helper for the mobile companion
-  feat(daemon): opt-in LAN access + mobile ingest bridge
-```
+- The mobile app talks to the (optional) desktop daemon over HTTP; the daemon-side support
+  (LAN access, `/ingest`, pairing) is merged and pushed on the desktop's `main`.
+- Going forward, mobile work lands via **PRs into `main`** on the mobile repo. See
+  `git log --oneline` for history (the on-device Phases 0–3A merged on top of the companion v1).
 
 ---
 
-## Status (verified 2026-06-08)
+## Status (verified 2026-06-11)
 
 | Check | Mobile (`2brn_mobile`) | Daemon (`2brn_desktop` @ main) |
 |---|---|---|
 | Types | `tsc --noEmit` ✅ | `pyright` ✅ 0 errors / 0 warnings |
 | Lint | `eslint` ✅ | `ruff` ✅ |
-| Tests | `jest` ✅ 30/30 (5 suites) | `pytest` ✅ 331 passed / 1 skipped |
+| Tests | `jest` ✅ 67/67 (11 suites) | `pytest` ✅ 331 passed / 1 skipped |
 | Bundle | `expo export --platform web` ✅ (all screens) | — |
 
 The daemon changes are **additive and off by default** — with `lan_access` unset the
@@ -137,25 +126,26 @@ src/
 
 ## What's done vs. left
 
-**Done & verified:** pairing (QR + manual), Home, Chat (streaming), Journal, Blog,
-Insights (day/week/month), Timeline, Instructions (CRUD), Saved, Settings, Share-to-2brn;
-dark/light theming; offline/empty/error states; daemon bridge + tests; CI workflow.
+**Done & verified (companion layer):** pairing (QR + manual), Home, Chat (streaming),
+Journal, Blog, Insights (day/week/month), Timeline, Instructions (CRUD), Saved, Settings,
+Share-to-2brn; dark/light theming; offline/empty/error states; daemon bridge + tests; CI.
 
-**Owner / next-agent follow-ups (none block the app from working):**
-1. **Produce the APK** — no Android SDK on the build machine. Use `expo prebuild` + Gradle,
-   or `eas build -p android --profile preview` (needs an Expo login). See
-   [`docs/BUILD.md`](docs/BUILD.md). `eas.json` is already set up.
-2. **Push/share the mobile repo** (`2brn_mobile@master` — still no remote) — owner does this
-   manually. Decide monorepo vs. a separate GitHub repo for the mobile app. (The desktop side
-   is already merged to `main` and pushed.)
-3. **Desktop "Connect a phone" QR panel** — optional; the terminal helper + manual entry
-   already work. Would add a QR (e.g. `qrcode.react`) to the desktop UI Settings.
-4. **Component render tests** — deferred: `@testing-library/react-native` v14.0.0 `render()`
-   returns `{}` on this React 19.2 / RN 0.85 / jest-expo stack (v13 peers are incompatible).
-   Logic is unit-tested and `expo export` proves rendering. Revisit when RTL stabilizes, or
-   try `test-renderer` directly.
-5. **Launcher icon** — Expo's default is used; drop `assets/icon.png` + set `expo.icon`.
-6. Possible later: off-LAN access (TLS/relay/Tailscale), plugins UI, iOS.
+**Done — on-device brain (Phases 0–2):** local SQLite store + on-device embeddings +
+semantic search (verified on-device); image OCR + voice STT capture; on-device LLM answers
++ opt-in auto-enrich. **OCR/STT/LLM await physical-device verification** (emulator `SIGILL`).
+
+**Owner / next-agent follow-ups:**
+1. **Verify OCR/STT/LLM on the target phone** — the definition of done for Phases 1–2 (they
+   don't run on the emulator). A one-tap on-device smoke check is the goal.
+2. **Produce a signed release build** — generate a real upload keystore (`eas credentials`
+   or a git-ignored `keystore.properties`) and build via Gradle/EAS. See
+   [`docs/BUILD.md`](docs/BUILD.md).
+3. **Phase 3 — two-way memory sync** with the desktop over the LAN (pull desktop activities;
+   push phone captures via `POST /ingest/note`).
+4. **Component render tests** — deferred: `@testing-library/react-native` v14 `render()`
+   returns `{}` on this React 19 / RN 0.85 / jest-expo stack. Logic is unit-tested and
+   `expo export` proves bundling. Revisit when RTL stabilizes.
+5. Possible later: off-LAN access (TLS/relay/Tailscale), plugins UI (read-only), iOS.
 
 ---
 
