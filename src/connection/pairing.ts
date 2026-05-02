@@ -1,4 +1,5 @@
 import { ApiError, createHttpClient } from '@/api/client'
+import { isHttpUrl } from '@/utils/url'
 
 export interface PairingPayload {
   baseUrl: string
@@ -18,7 +19,7 @@ export function buildPairingUrl(baseUrl: string, token: string): string {
 function normalize(baseUrl: string, token: string): PairingPayload | null {
   const url = baseUrl.trim().replace(/\/+$/, '')
   const tok = token.trim()
-  if (!/^https?:\/\/.+/i.test(url) || !tok) return null
+  if (!isHttpUrl(url) || !tok) return null
   return { baseUrl: url, token: tok }
 }
 
