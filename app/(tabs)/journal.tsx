@@ -25,6 +25,7 @@ export default function JournalScreen() {
       <ScreenTitle>Journal</ScreenTitle>
       <DateBar date={date} onChange={setDate} />
       <MarkdownDocView
+        key={date}
         content={journal.data?.content ?? null}
         generatedAt={journal.data?.generated_at}
         editedByUser={journal.data?.edited_by_user}
