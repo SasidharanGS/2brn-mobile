@@ -27,6 +27,7 @@ export default function BlogScreen() {
       <Screen scroll topInset={false} refreshing={blog.isRefetching} onRefresh={() => void blog.refetch()}>
         <DateBar date={date} onChange={setDate} />
         <MarkdownDocView
+          key={date}
           content={blog.data?.content ?? null}
           generatedAt={blog.data?.generated_at}
           editedByUser={blog.data?.edited_by_user}
