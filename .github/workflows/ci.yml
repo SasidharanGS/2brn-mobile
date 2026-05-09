@@ -6,7 +6,7 @@ on:
 
 jobs:
   check:
-    name: typecheck · lint · test
+    name: typecheck · lint · test · build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,5 +25,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Test
+      - name: Test (with coverage floor)
         run: npm run test:ci
+
+      # Bundle the app for the target platform via Metro — proves every screen/route
+      # compiles and bundles (no Android SDK needed; this does not build native code).
+      - name: Build (Android JS bundle)
+        run: npx expo export --platform android
