@@ -16,7 +16,7 @@ import { ApiError } from '@/api/client'
 import { TASK_CATEGORIES } from '@/api/types'
 import { Markdown } from '@/components/Markdown'
 import { useApi } from '@/connection/ConnectionContext'
-import { categoryChip } from '@/theme/colors'
+import { categoryChip, MUTED, PRIMARY } from '@/theme/colors'
 import { todayISODate } from '@/utils/date'
 
 interface Msg {
@@ -48,7 +48,8 @@ export default function ChatScreen() {
     setMessages((prev) => {
       const copy = [...prev]
       const last = copy[copy.length - 1]
-      if (last && last.role === 'assistant') copy[copy.length - 1] = { ...last, content: last.content + chunk }
+      if (last && last.role === 'assistant')
+        copy[copy.length - 1] = { ...last, content: last.content + chunk }
       return copy
     })
 
@@ -56,7 +57,11 @@ export default function ChatScreen() {
     const q = input.trim()
     if (!q || streaming) return
     setInput('')
-    setMessages((m) => [...m, { id: nextId(), role: 'user', content: q }, { id: nextId(), role: 'assistant', content: '' }])
+    setMessages((m) => [
+      ...m,
+      { id: nextId(), role: 'user', content: q },
+      { id: nextId(), role: 'assistant', content: '' },
+    ])
     setStreaming(true)
     const ctrl = new AbortController()
     abortRef.current = ctrl
@@ -71,7 +76,10 @@ export default function ChatScreen() {
       }
     } catch (e) {
       if (!ctrl.signal.aborted) {
-        const msg = e instanceof ApiError && e.status === 0 ? "I can't reach your desktop right now." : `Error: ${(e as Error).message}`
+        const msg =
+          e instanceof ApiError && e.status === 0
+            ? "I can't reach your desktop right now."
+            : `Error: ${(e as Error).message}`
         appendToLast(`\n\n_${msg}_`)
       }
     } finally {
@@ -88,10 +96,17 @@ export default function ChatScreen() {
       keyboardVerticalOffset={insets.bottom + 56}
       className="flex-1 bg-slate-50 dark:bg-slate-950"
     >
-      <View style={{ paddingTop: insets.top }} className="border-b border-slate-200 px-4 pb-2 dark:border-slate-800">
+      <View
+        style={{ paddingTop: insets.top }}
+        className="border-b border-slate-200 px-4 pb-2 dark:border-slate-800"
+      >
         <Text className="py-2 text-xl font-bold text-slate-900 dark:text-slate-50">Chat</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-          <FilterChip label="Today only" active={todayOnly} onPress={() => setTodayOnly((v) => !v)} />
+          <FilterChip
+            label="Today only"
+            active={todayOnly}
+            onPress={() => setTodayOnly((v) => !v)}
+          />
           {TASK_CATEGORIES.map((c) => (
             <FilterChip
               key={c}
@@ -104,10 +119,14 @@ export default function ChatScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView ref={scrollRef} className="flex-1 px-4" contentContainerStyle={{ paddingVertical: 16 }}>
+      <ScrollView
+        ref={scrollRef}
+        className="flex-1 px-4"
+        contentContainerStyle={{ paddingVertical: 16 }}
+      >
         {messages.length === 0 ? (
           <View className="mt-10 items-center px-6">
-            <Ionicons name="chatbubble-ellipses-outline" size={40} color="#60a5fa" />
+            <Ionicons name="chatbubble-ellipses-outline" size={40} color={PRIMARY} />
             <Text className="mt-3 text-center text-base font-semibold text-slate-700 dark:text-slate-200">
               Ask your second brain
             </Text>
@@ -128,7 +147,7 @@ export default function ChatScreen() {
           value={input}
           onChangeText={setInput}
           placeholder="Ask about your day…"
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={MUTED}
           multiline
           className="max-h-28 flex-1 rounded-2xl border border-slate-300 px-4 py-2.5 text-slate-900 dark:border-slate-700 dark:text-slate-100"
         />
@@ -185,7 +204,7 @@ function Bubble({ msg, streaming }: { msg: Msg; streaming: boolean }) {
         {isUser ? (
           <Text className="text-base text-white">{msg.content}</Text>
         ) : empty && streaming ? (
-          <ActivityIndicator color="#60a5fa" />
+          <ActivityIndicator color={PRIMARY} />
         ) : (
           <Markdown>{msg.content}</Markdown>
         )}

@@ -38,3 +38,10 @@ export function stateChip(state?: string | null): ChipColors {
 
 // Brand accent, reused for the tab bar and primary actions.
 export const PRIMARY = '#60a5fa'
+
+// Semantic UI accents for icon/indicator colors. Reference these instead of inline hex so
+// the palette has one source of truth; reserve inline style={{ color }} only for the
+// genuinely dynamic chip/meter colors above.
+export const DANGER = '#f87171' // destructive actions (delete)
+export const MUTED = '#94a3b8' // secondary / placeholder icons
+export const SUCCESS = '#34d399' // success confirmation
