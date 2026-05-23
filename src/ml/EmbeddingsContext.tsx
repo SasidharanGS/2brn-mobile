@@ -1,17 +1,25 @@
-// Loads the on-device embedding model ONCE (it's a hook, so it must live in a
-// component) and shares it app-wide. Screens call useEmbeddings().embed(text)
-// instead of each spinning up their own model instance.
-import { createContext, useContext, type ReactNode } from 'react'
+// Holds the on-device embedding model and shares it app-wide. LAZY-loaded (M6): the
+// ~90 MB model used to download at every launch — even for someone who pairs a desktop
+// and only ever reads their journal. Now it loads on first embed()/preload(), so the
+// capture surfaces (which call useSaveMemory → preload) warm it up, while paired-only
+// users who never touch on-device features never pay for it. embed() ensure-loads, so
+// it's safe to call before the model is ready (it just awaits the one-time load).
+import { createContext, useCallback, useContext, type ReactNode } from 'react'
 import { useTextEmbeddings } from 'react-native-executorch'
 
 import { EMBEDDING_MODEL } from './embeddings'
+import { useLazyModel } from './useLazyModel'
 
 export interface EmbeddingsApi {
-  /** Embed text into a 384-dim vector (number[] so it JSON-serializes for SQLite). */
+  /** Embed text into a 384-dim vector (number[] so it JSON-serializes for SQLite). Loads on first call. */
   embed: (text: string) => Promise<number[]>
-  /** True once the model has downloaded + loaded and embed() is usable. */
+  /** Optional warm-up: start loading before the first embed (capture surfaces call this). */
+  preload: () => void
+  /** True once the model has downloaded + loaded and embed() is immediate. */
   isReady: boolean
-  /** Model download progress, 0..1 (first launch only). */
+  /** True while a load has been requested but hasn't finished. */
+  isLoading: boolean
+  /** Model download progress, 0..1 (first use only). */
   downloadProgress: number
   /** Non-null if the model failed to load or embed. */
   error: unknown
@@ -20,12 +28,23 @@ export interface EmbeddingsApi {
 const EmbeddingsContext = createContext<EmbeddingsApi | null>(null)
 
 export function EmbeddingsProvider({ children }: { children: ReactNode }) {
-  const model = useTextEmbeddings({ model: EMBEDDING_MODEL })
-  // Recreated each render (cheap): the provider only re-renders as the model's
-  // load state changes, and consumers call embed() on user action.
+  const { model, modelRef, ensureLoaded, preload, isLoading } = useLazyModel(useTextEmbeddings, {
+    model: EMBEDDING_MODEL,
+  })
+
+  const embed = useCallback(
+    async (text: string) => {
+      await ensureLoaded()
+      return Array.from(await modelRef.current.forward(text))
+    },
+    [ensureLoaded, modelRef],
+  )
+
   const value: EmbeddingsApi = {
-    embed: async (text: string) => Array.from(await model.forward(text)),
+    embed,
+    preload,
     isReady: model.isReady,
+    isLoading,
     downloadProgress: model.downloadProgress,
     error: model.error,
   }
