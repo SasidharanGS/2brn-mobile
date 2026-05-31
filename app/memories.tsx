@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -99,7 +99,12 @@ export default function MemoriesScreen() {
   }
 
   const shown: LocalMemory[] = results ? results.map((r) => r.memory) : items
-  const scoreFor = (id: number) => results?.find((r) => r.memory.id === id)?.score
+  // Build the id→score lookup once per results change instead of an O(n) find per row.
+  const scoreById = useMemo(
+    () => new Map(results?.map((r) => [r.memory.id, r.score] as const)),
+    [results],
+  )
+  const scoreFor = (id: number) => scoreById.get(id)
 
   return (
     <KeyboardAvoidingView
