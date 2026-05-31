@@ -117,7 +117,7 @@ export default function InsightsScreen() {
                 <Card>
                   {data.recurring_activities.map((r, i) => (
                     <View
-                      key={i}
+                      key={r.canonical_summary}
                       className={
                         i > 0 ? 'mt-3 border-t border-slate-100 pt-3 dark:border-slate-800' : ''
                       }

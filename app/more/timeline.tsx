@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Text, View } from 'react-native'
 
 import { DateBar } from '@/components/DateBar'
@@ -13,7 +13,10 @@ import { prettyTime, relativeDay, todayISODate } from '@/utils/date'
 export default function TimelineScreen() {
   const [date, setDate] = useState(todayISODate())
   const q = useActivities({ date })
-  const activities = [...(q.data ?? [])].sort((a, b) => a.started_at.localeCompare(b.started_at))
+  const activities = useMemo(
+    () => [...(q.data ?? [])].sort((a, b) => a.started_at.localeCompare(b.started_at)),
+    [q.data],
+  )
 
   return (
     <View className="flex-1 bg-slate-50 dark:bg-slate-950">

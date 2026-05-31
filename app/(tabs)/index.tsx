@@ -21,7 +21,11 @@ function QuickAction({
 }) {
   return (
     <Link href={href} asChild>
-      <Pressable className="flex-1 items-center rounded-2xl border border-slate-200 bg-white py-4 active:opacity-70 dark:border-slate-800 dark:bg-slate-900">
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={label}
+        className="flex-1 items-center rounded-2xl border border-slate-200 bg-white py-4 active:opacity-70 dark:border-slate-800 dark:bg-slate-900"
+      >
         <Ionicons name={icon} size={22} color={PRIMARY} />
         <Text className="mt-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
           {label}
