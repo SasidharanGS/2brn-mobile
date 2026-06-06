@@ -1,0 +1,57 @@
+name: 🐛 Bug report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! 2brn Mobile stores your captures on-device — please **do not**
+        paste note content, voice transcripts, or OCR text you wouldn't want to be public.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - On-device brain (OCR / STT / LLM)
+        - Capture (notes / share / images / voice)
+        - Search & memory
+        - Desktop companion / pairing
+        - UI / screens
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: "Pixel 8, Android 14"
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Node / Expo / 2brn-mobile versions
+      placeholder: "node 22.4, expo 56, 2brn-mobile commit abc1234"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Metro / logcat output with sensitive content scrubbed.
+      render: shell
