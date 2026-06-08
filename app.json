@@ -13,6 +13,10 @@
       "edgeToEdgeEnabled": true,
       "permissions": ["android.permission.CAMERA"]
     },
+    "ios": {
+      "bundleIdentifier": "com.twobrn.mobile",
+      "supportsTablet": false
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",
