@@ -127,9 +127,11 @@ of the box. Pairing is **opt-in** and stays **local-first**:
 1. **Desktop**, Settings → *Connect a phone*: a toggle enables **LAN access** (the
    daemon rebinds to `0.0.0.0`; **off by default**). The panel then renders a **QR
    code** encoding the pairing payload.
-2. **Pairing payload**: a deep link `2brn://pair?u=<base64url(http://LAN_IP:7842)>&t=<token>`
-   (the `token` is the existing `~/.2brn/api_token`). Base64url avoids query-escaping
-   issues. The desktop gets the LAN URL(s) from the new `GET /connection-info`.
+2. **Pairing payload**: a deep link `twobrn://pair?u=<encodeURIComponent(http://LAN_IP:7842)>&t=<token>`
+   (the `token` is the existing `~/.2brn/api_token`). The scheme is `twobrn` because
+   URI schemes can't start with a digit (RFC 3986); the URL is URI-encoded rather
+   than base64 so it decodes with the built-in `decodeURIComponent` (no `atob`
+   polyfill). The desktop gets the LAN URL(s) from the new `GET /connection-info`.
 3. **Mobile**, Pair screen: scan the QR (or type URL + token manually) → validate by
    calling public `GET /status`, then an authed call to confirm the token → store
    `{baseUrl, token}` in **expo-secure-store** → enter the app.
