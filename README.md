@@ -1,5 +1,8 @@
 # 2brn Mobile — Android companion
 
+> **Continuing this work / picking it up?** Start with [`HANDOFF.md`](HANDOFF.md) — it has
+> the branch map (two repos!), current status, quickstart, and what's left.
+
 A React Native (Expo) **Android companion** for [2brn](https://github.com/SasidharanGS/2brn),
 the local-first "second brain" desktop app. Your desktop keeps doing the heavy
 lifting — screen capture → OCR → AI inference → RAG. This app puts the result in
