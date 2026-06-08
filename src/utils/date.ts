@@ -49,9 +49,19 @@ export function relativeDay(iso: string): string {
   return prettyDate(iso)
 }
 
-/** "2:47 PM" — a locale-aware time from an ISO timestamp (UTC or local). */
+/**
+ * "2:47 PM" — a locale-aware local time from a daemon timestamp. The daemon stores
+ * UTC and strips the offset, so a naive value (no Z / no ±hh:mm) is treated as UTC
+ * before converting to the device's local time. Values that already carry an offset
+ * are parsed as-is.
+ */
 export function prettyTime(isoTimestamp: string): string {
-  const d = new Date(isoTimestamp.includes('T') ? isoTimestamp : isoTimestamp.replace(' ', 'T'))
+  let s = isoTimestamp.trim()
+  if (s.includes('T') || s.includes(' ')) {
+    s = s.replace(' ', 'T')
+    if (!/(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(s)) s += 'Z' // naive → UTC
+  }
+  const d = new Date(s)
   if (Number.isNaN(d.getTime())) return ''
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
 }
