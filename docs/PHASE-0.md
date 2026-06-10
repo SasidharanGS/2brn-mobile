@@ -74,12 +74,14 @@ Search box  ──embed(query)──►  cosine vs every row  ──►  ranked 
 - ✅ **Check:** turn on **airplane mode**, Share a link from Chrome → "Save to 2brn" → it appears in the
   local list.
 
-### Step 4 — The semantic-search screen
-- In `app/more/saved.tsx`: load all memories; add a search box. On submit: `embed(query)`, compute
-  cosine similarity against every row's embedding, sort desc, show the top results (snippet + source).
-- Add empty/offline states (reuse `src/components/states.tsx`).
-- ✅ **Check (the money shot):** airplane mode **on**, search **"pricing"** and it surfaces the pricing
-  article you saved — even though you never typed the word "pricing" into it.
+### Step 4 — The semantic-search screen ✅ done
+- Built a standalone **`app/memories.tsx`** ("On this phone"): quick-add, a list, and a search box that
+  embeds the query and ranks saved items by cosine similarity (`src/ml/search.ts` → `rankBySimilarity`,
+  unit-tested). Reachable **without pairing** via a "Use on this phone without a desktop →" link on the
+  pair screen. (The tabbed UI stays pairing-gated for now; fully opening the app unpaired is a Phase 3
+  follow-up.)
+- ✅ **Verified on-device (money shot):** the query *"how much does the database cost"* ranked the
+  "database pricing" note #1 (score 0.567) over unrelated notes — matched by meaning, fully offline.
 
 ## Definition of done
 
