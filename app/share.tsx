@@ -3,25 +3,31 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useShareIntentContext } from 'expo-share-intent'
 import { useEffect, useState } from 'react'
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { queryKeys } from '@/api/queryKeys'
 import { Button, Card } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
-import { insertMemory } from '@/db/local'
-import { useEmbeddings } from '@/ml/EmbeddingsContext'
 import { useOcr } from '@/ml/OcrContext'
-import { useAutoEnrich } from '@/ml/useAutoEnrich'
+import { useSaveMemory } from '@/ml/useSaveMemory'
 
 export default function ShareScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const qc = useQueryClient()
   const { state } = useConnection()
-  const { embed, isReady } = useEmbeddings()
   const { extractText, downloadProgress } = useOcr()
-  const enrichInBackground = useAutoEnrich()
+  const saveMemory = useSaveMemory()
   const { shareIntent, hasShareIntent, resetShareIntent } = useShareIntentContext()
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
@@ -40,7 +46,9 @@ export default function ShareScreen() {
   // Seed the form from an incoming share intent. This is render-phase state
   // adjustment (React's "adjusting state when an input changes" pattern), not an
   // effect — it re-seeds only when a genuinely new intent arrives.
-  const intentKey = hasShareIntent ? `${shareIntent.text ?? ''}|${shareIntent.webUrl ?? ''}|${sharedImage ?? ''}` : null
+  const intentKey = hasShareIntent
+    ? `${shareIntent.text ?? ''}|${shareIntent.webUrl ?? ''}|${sharedImage ?? ''}`
+    : null
   if (intentKey && intentKey !== seededFor) {
     setSeededFor(intentKey)
     setText(shareIntent.text ?? shareIntent.webUrl ?? '')
@@ -80,16 +88,12 @@ export default function ShareScreen() {
       const titleVal = title.trim() || undefined
       const urlVal = url.trim() || undefined
       // 1) Save on-device first — works offline and without a paired desktop.
-      const embedding = isReady ? await embed(trimmed) : null
-      const id = await insertMemory({
+      await saveMemory({
         text: trimmed,
         title: titleVal ?? null,
         sourceUrl: urlVal ?? null,
         source: image ? 'mobile-image' : hasShareIntent ? 'mobile-share' : 'mobile',
-        embedding,
       })
-      // Auto-enrich in the background (best-effort, only if enabled) — never blocks the save.
-      void enrichInBackground(id, trimmed)
       // 2) Best-effort sync to the desktop when paired (companion behavior).
       if (client) {
         try {
@@ -117,9 +121,16 @@ export default function ShareScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-slate-50 dark:bg-slate-950"
     >
-      <View style={{ paddingTop: insets.top + 8 }} className="flex-row items-center justify-between px-4 pb-2">
+      <View
+        style={{ paddingTop: insets.top + 8 }}
+        className="flex-row items-center justify-between px-4 pb-2"
+      >
         <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">Save to 2brn</Text>
-        <Pressable accessibilityLabel="Close" onPress={close} className="h-9 w-9 items-center justify-center">
+        <Pressable
+          accessibilityLabel="Close"
+          onPress={close}
+          className="h-9 w-9 items-center justify-center"
+        >
           <Ionicons name="close" size={24} color="#94a3b8" />
         </Pressable>
       </View>
@@ -131,7 +142,9 @@ export default function ShareScreen() {
         {done ? (
           <View className="items-center py-12">
             <Ionicons name="checkmark-circle" size={56} color="#34d399" />
-            <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">Saved to your phone</Text>
+            <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">
+              Saved to your phone
+            </Text>
             <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
               {client
                 ? "It's saved on-device and synced to your desktop."
@@ -152,7 +165,8 @@ export default function ShareScreen() {
                 />
                 {ocrBusy ? (
                   <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
-                    Reading text from image…{downloadProgress < 1 ? ` ${Math.round(downloadProgress * 100)}%` : ''}
+                    Reading text from image…
+                    {downloadProgress < 1 ? ` ${Math.round(downloadProgress * 100)}%` : ''}
                   </Text>
                 ) : ocrFailed ? (
                   <Text className="mt-2 text-center text-xs text-amber-500">
@@ -196,9 +210,16 @@ export default function ShareScreen() {
               className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             {save.isError ? (
-              <Text className="mb-3 text-sm text-red-500">Couldn&apos;t save. Please try again.</Text>
+              <Text className="mb-3 text-sm text-red-500">
+                Couldn&apos;t save. Please try again.
+              </Text>
             ) : null}
-            <Button label="Save to 2brn" loading={save.isPending} disabled={!text.trim()} onPress={() => save.mutate()} />
+            <Button
+              label="Save to 2brn"
+              loading={save.isPending}
+              disabled={!text.trim()}
+              onPress={() => save.mutate()}
+            />
             {!client ? (
               <Text className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
                 Saved on your phone. Connect a desktop later to sync.
