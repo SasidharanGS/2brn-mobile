@@ -46,7 +46,8 @@
         }
       ],
       "expo-sqlite",
-      "expo-asset"
+      "expo-asset",
+      "expo-audio"
     ]
   }
 }
