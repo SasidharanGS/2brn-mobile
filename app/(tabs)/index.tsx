@@ -7,6 +7,7 @@ import { Screen } from '@/components/Screen'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { useInsightsSummary, useStatus } from '@/hooks/queries'
+import { PRIMARY } from '@/theme/colors'
 import { prettyTime, todayISODate } from '@/utils/date'
 
 function QuickAction({
@@ -21,7 +22,7 @@ function QuickAction({
   return (
     <Link href={href} asChild>
       <Pressable className="flex-1 items-center rounded-2xl border border-slate-200 bg-white py-4 active:opacity-70 dark:border-slate-800 dark:bg-slate-900">
-        <Ionicons name={icon} size={22} color="#60a5fa" />
+        <Ionicons name={icon} size={22} color={PRIMARY} />
         <Text className="mt-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
           {label}
         </Text>

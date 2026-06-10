@@ -27,6 +27,7 @@ import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { useStt } from '@/ml/SttContext'
 import { useSaveMemory } from '@/ml/useSaveMemory'
 import { getAutoEnrich, setAutoEnrich as persistAutoEnrich } from '@/settings/prefs'
+import { DANGER, MUTED, PRIMARY } from '@/theme/colors'
 import { prettyTime } from '@/utils/date'
 
 export default function MemoriesScreen() {
@@ -197,7 +198,7 @@ export default function MemoriesScreen() {
               onPress={() => router.back()}
               className="mr-1 h-9 w-9 items-center justify-center"
             >
-              <Ionicons name="chevron-back" size={24} color="#94a3b8" />
+              <Ionicons name="chevron-back" size={24} color={MUTED} />
             </Pressable>
           ) : null}
           <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">On this phone</Text>
@@ -207,7 +208,7 @@ export default function MemoriesScreen() {
           onPress={() => router.push('/pair')}
           className="flex-row items-center rounded-full px-3 py-1.5"
         >
-          <Ionicons name="desktop-outline" size={15} color="#6366f1" />
+          <Ionicons name="desktop-outline" size={15} color={PRIMARY} />
           <Text className="ml-1.5 text-sm font-medium text-primary">Connect</Text>
         </Pressable>
       </View>
@@ -227,7 +228,7 @@ export default function MemoriesScreen() {
             value={draft}
             onChangeText={setDraft}
             placeholder="Jot something to remember…"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={MUTED}
             multiline
             textAlignVertical="top"
             className="mb-3 min-h-[64px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
@@ -287,14 +288,14 @@ export default function MemoriesScreen() {
         </View>
 
         <View className="mb-3 flex-row items-center rounded-xl border border-slate-300 px-3 dark:border-slate-700">
-          <Ionicons name="search" size={16} color="#94a3b8" />
+          <Ionicons name="search" size={16} color={MUTED} />
           <TextInput
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={() => void runSearch()}
             returnKeyType="search"
             placeholder="Search by meaning…"
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={MUTED}
             className="ml-2 flex-1 py-2 text-slate-900 dark:text-slate-100"
           />
           {query ? (
@@ -306,7 +307,7 @@ export default function MemoriesScreen() {
                 setAskAnswer(null)
               }}
             >
-              <Ionicons name="close-circle" size={16} color="#94a3b8" />
+              <Ionicons name="close-circle" size={16} color={MUTED} />
             </Pressable>
           ) : null}
         </View>
@@ -323,7 +324,7 @@ export default function MemoriesScreen() {
         {asking || askAnswer ? (
           <Card className="mb-3">
             <View className="mb-1 flex-row items-center">
-              <Ionicons name="sparkles" size={14} color="#6366f1" />
+              <Ionicons name="sparkles" size={14} color={PRIMARY} />
               <Text className="ml-1 text-xs font-semibold uppercase tracking-wider text-primary">
                 Answer
               </Text>
@@ -394,7 +395,7 @@ export default function MemoriesScreen() {
                     onPress={() => void remove(m.id)}
                     className="h-8 w-8 items-center justify-center"
                   >
-                    <Ionicons name="trash-outline" size={18} color="#f87171" />
+                    <Ionicons name="trash-outline" size={18} color={DANGER} />
                   </Pressable>
                 </View>
               </Card>
