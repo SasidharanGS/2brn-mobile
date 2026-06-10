@@ -12,6 +12,7 @@ import { useConnection } from '@/connection/ConnectionContext'
 import { insertMemory } from '@/db/local'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
 import { useOcr } from '@/ml/OcrContext'
+import { useAutoEnrich } from '@/ml/useAutoEnrich'
 
 export default function ShareScreen() {
   const router = useRouter()
@@ -20,6 +21,7 @@ export default function ShareScreen() {
   const { state } = useConnection()
   const { embed, isReady } = useEmbeddings()
   const { extractText, downloadProgress } = useOcr()
+  const enrichInBackground = useAutoEnrich()
   const { shareIntent, hasShareIntent, resetShareIntent } = useShareIntentContext()
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
@@ -79,13 +81,15 @@ export default function ShareScreen() {
       const urlVal = url.trim() || undefined
       // 1) Save on-device first — works offline and without a paired desktop.
       const embedding = isReady ? await embed(trimmed) : null
-      await insertMemory({
+      const id = await insertMemory({
         text: trimmed,
         title: titleVal ?? null,
         sourceUrl: urlVal ?? null,
         source: image ? 'mobile-image' : hasShareIntent ? 'mobile-share' : 'mobile',
         embedding,
       })
+      // Auto-enrich in the background (best-effort, only if enabled) — never blocks the save.
+      void enrichInBackground(id, trimmed)
       // 2) Best-effort sync to the desktop when paired (companion behavior).
       if (client) {
         try {
