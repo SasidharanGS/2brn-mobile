@@ -1,11 +1,13 @@
 import { useColorScheme } from 'react-native'
 import MarkdownDisplay from 'react-native-markdown-display'
 
+import { MUTED, PRIMARY } from '@/theme/colors'
+
 /** Themed markdown renderer used for journal, blog, and chat answers. */
 export function Markdown({ children }: { children: string }) {
   const dark = useColorScheme() === 'dark'
   const text = dark ? '#e2e8f0' : '#0f172a'
-  const muted = dark ? '#94a3b8' : '#475569'
+  const muted = dark ? MUTED : '#475569'
   const codeBg = dark ? '#1e293b' : '#e2e8f0'
 
   const styles = {
@@ -16,7 +18,7 @@ export function Markdown({ children }: { children: string }) {
     strong: { fontWeight: '700' },
     blockquote: {
       backgroundColor: dark ? '#0b1220' : '#f1f5f9',
-      borderColor: '#60a5fa',
+      borderColor: PRIMARY,
       borderLeftWidth: 3,
       paddingHorizontal: 12,
       paddingVertical: 6,
@@ -24,9 +26,19 @@ export function Markdown({ children }: { children: string }) {
       color: muted,
     },
     code_inline: { backgroundColor: codeBg, color: text, borderRadius: 4, paddingHorizontal: 4 },
-    fence: { backgroundColor: dark ? '#0b1220' : '#f1f5f9', color: text, borderRadius: 8, padding: 10 },
-    code_block: { backgroundColor: dark ? '#0b1220' : '#f1f5f9', color: text, borderRadius: 8, padding: 10 },
-    link: { color: '#60a5fa' },
+    fence: {
+      backgroundColor: dark ? '#0b1220' : '#f1f5f9',
+      color: text,
+      borderRadius: 8,
+      padding: 10,
+    },
+    code_block: {
+      backgroundColor: dark ? '#0b1220' : '#f1f5f9',
+      color: text,
+      borderRadius: 8,
+      padding: 10,
+    },
+    link: { color: PRIMARY },
     hr: { backgroundColor: dark ? '#334155' : '#cbd5e1', height: 1 },
     list_item: { marginVertical: 2 },
   }

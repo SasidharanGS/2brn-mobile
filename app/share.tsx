@@ -20,6 +20,7 @@ import { Button, Card } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { useOcr } from '@/ml/OcrContext'
 import { useSaveMemory } from '@/ml/useSaveMemory'
+import { MUTED, SUCCESS } from '@/theme/colors'
 
 export default function ShareScreen() {
   const router = useRouter()
@@ -131,7 +132,7 @@ export default function ShareScreen() {
           onPress={close}
           className="h-9 w-9 items-center justify-center"
         >
-          <Ionicons name="close" size={24} color="#94a3b8" />
+          <Ionicons name="close" size={24} color={MUTED} />
         </Pressable>
       </View>
 
@@ -141,7 +142,7 @@ export default function ShareScreen() {
       >
         {done ? (
           <View className="items-center py-12">
-            <Ionicons name="checkmark-circle" size={56} color="#34d399" />
+            <Ionicons name="checkmark-circle" size={56} color={SUCCESS} />
             <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">
               Saved to your phone
             </Text>
@@ -182,7 +183,7 @@ export default function ShareScreen() {
               value={title}
               onChangeText={setTitle}
               placeholder="A short title"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               className="mb-3 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -192,7 +193,7 @@ export default function ShareScreen() {
               value={text}
               onChangeText={setText}
               placeholder="What do you want to remember?"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               multiline
               textAlignVertical="top"
               className="mb-3 min-h-[120px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
@@ -206,7 +207,7 @@ export default function ShareScreen() {
               autoCapitalize="none"
               keyboardType="url"
               placeholder="https://…"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             {save.isError ? (

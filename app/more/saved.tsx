@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/states'
 import { Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useSharedNotes } from '@/hooks/queries'
+import { DANGER, PRIMARY } from '@/theme/colors'
 import { prettyTime } from '@/utils/date'
 import { isHttpUrl, openExternalUrl } from '@/utils/url'
 
@@ -40,7 +41,7 @@ export default function SavedScreen() {
             onPress={() => router.push('/share')}
             className="h-10 w-10 items-center justify-center"
           >
-            <Ionicons name="add" size={26} color="#60a5fa" />
+            <Ionicons name="add" size={26} color={PRIMARY} />
           </Pressable>
         }
       />
@@ -100,7 +101,7 @@ export default function SavedScreen() {
                     onPress={() => confirmDelete(n.id)}
                     className="h-8 w-8 items-center justify-center"
                   >
-                    <Ionicons name="trash-outline" size={18} color="#f87171" />
+                    <Ionicons name="trash-outline" size={18} color={DANGER} />
                   </Pressable>
                 </View>
               </Card>
