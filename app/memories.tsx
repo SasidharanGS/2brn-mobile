@@ -17,7 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Button, Card } from '@/components/ui'
-import { deleteMemory, getAllMemories, insertMemory, type LocalMemory } from '@/db/local'
+import { deleteMemory, getAllMemories, type LocalMemory } from '@/db/local'
 import { concatFloat32, maxAbsAmplitude, STT_SAMPLE_RATE } from '@/ml/audioWaveform'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
 import { ANSWER_CONTEXT_SIZE } from '@/ml/llm'
@@ -25,7 +25,7 @@ import { useLlm } from '@/ml/LlmContext'
 import { useOcr } from '@/ml/OcrContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { useStt } from '@/ml/SttContext'
-import { useAutoEnrich } from '@/ml/useAutoEnrich'
+import { useSaveMemory } from '@/ml/useSaveMemory'
 import { getAutoEnrich, setAutoEnrich as persistAutoEnrich } from '@/settings/prefs'
 import { prettyTime } from '@/utils/date'
 
@@ -36,7 +36,7 @@ export default function MemoriesScreen() {
   const { extractText } = useOcr()
   const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
   const { answer, isGenerating, downloadProgress: llmDownloadProgress } = useLlm()
-  const enrichInBackground = useAutoEnrich()
+  const saveMemory = useSaveMemory()
 
   const [items, setItems] = useState<LocalMemory[]>([])
   const [autoEnrich, setAutoEnrich] = useState(false)
@@ -81,16 +81,12 @@ export default function MemoriesScreen() {
     if (!text) return
     setAdding(true)
     try {
-      const embedding = isReady ? await embed(text) : null
-      const id = await insertMemory({ text, source: 'mobile', embedding })
+      // Embed + persist + best-effort enrich (shared with share.tsx); refresh when enriched.
+      await saveMemory({ text, source: 'mobile' }, () => void reload())
       setDraft('')
       setQuery('')
       setResults(null)
       await reload()
-      // Auto-enrich in the background (best-effort, only if enabled); refresh when done.
-      void enrichInBackground(id, text).then((did) => {
-        if (did) void reload()
-      })
     } finally {
       setAdding(false)
     }
@@ -161,10 +157,14 @@ export default function MemoriesScreen() {
     if (!q || !hits || hits.length === 0) return
     setAsking(true)
     try {
-      const sources = hits.slice(0, ANSWER_CONTEXT_SIZE).map((h) => ({ text: h.memory.text, title: h.memory.title }))
+      const sources = hits
+        .slice(0, ANSWER_CONTEXT_SIZE)
+        .map((h) => ({ text: h.memory.text, title: h.memory.title }))
       setAskAnswer(await answer(q, sources))
     } catch {
-      setAskAnswer("Couldn't generate an answer — the model may still be downloading. Try again in a moment.")
+      setAskAnswer(
+        "Couldn't generate an answer — the model may still be downloading. Try again in a moment.",
+      )
     } finally {
       setAsking(false)
     }
@@ -232,7 +232,12 @@ export default function MemoriesScreen() {
             textAlignVertical="top"
             className="mb-3 min-h-[64px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
           />
-          <Button label="Add to memory" loading={adding} disabled={!draft.trim()} onPress={() => void add()} />
+          <Button
+            label="Add to memory"
+            loading={adding}
+            disabled={!draft.trim()}
+            onPress={() => void add()}
+          />
           <View className="mt-2 flex-row gap-2">
             <Button
               label="From image"
@@ -252,17 +257,22 @@ export default function MemoriesScreen() {
             />
           </View>
           {recording ? (
-            <Text className="mt-2 text-center text-xs text-red-500">● Recording… tap Stop when done</Text>
+            <Text className="mt-2 text-center text-xs text-red-500">
+              ● Recording… tap Stop when done
+            </Text>
           ) : transcribing ? (
             <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
-              Transcribing on-device…{sttDownloadProgress < 1 ? ` ${Math.round(sttDownloadProgress * 100)}%` : ''}
+              Transcribing on-device…
+              {sttDownloadProgress < 1 ? ` ${Math.round(sttDownloadProgress * 100)}%` : ''}
             </Text>
           ) : null}
         </Card>
 
         <View className="mb-4 flex-row items-center justify-between px-1">
           <View className="flex-1 pr-3">
-            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-enrich with AI</Text>
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              Auto-enrich with AI
+            </Text>
             <Text className="text-xs text-slate-400 dark:text-slate-500">
               Summarize &amp; tag new notes on-device (downloads a model)
             </Text>
@@ -314,7 +324,9 @@ export default function MemoriesScreen() {
           <Card className="mb-3">
             <View className="mb-1 flex-row items-center">
               <Ionicons name="sparkles" size={14} color="#6366f1" />
-              <Text className="ml-1 text-xs font-semibold uppercase tracking-wider text-primary">Answer</Text>
+              <Text className="ml-1 text-xs font-semibold uppercase tracking-wider text-primary">
+                Answer
+              </Text>
             </View>
             {asking ? (
               <Text className="text-sm text-slate-400 dark:text-slate-500">
@@ -337,7 +349,9 @@ export default function MemoriesScreen() {
 
         {shown.length === 0 ? (
           <Text className="mt-8 text-center text-sm text-slate-400 dark:text-slate-500">
-            {results ? 'No matches.' : 'Nothing saved yet. Add a note above, or share something into 2brn.'}
+            {results
+              ? 'No matches.'
+              : 'Nothing saved yet. Add a note above, or share something into 2brn.'}
           </Text>
         ) : (
           shown.map((m) => {
@@ -345,13 +359,17 @@ export default function MemoriesScreen() {
             return (
               <Card key={m.id} className="mb-2">
                 {m.title ? (
-                  <Text className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">{m.title}</Text>
+                  <Text className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">
+                    {m.title}
+                  </Text>
                 ) : null}
                 <Text numberOfLines={4} className="text-sm text-slate-700 dark:text-slate-300">
                   {m.text}
                 </Text>
                 {m.summary ? (
-                  <Text className="mt-1.5 text-xs italic text-slate-500 dark:text-slate-400">{m.summary}</Text>
+                  <Text className="mt-1.5 text-xs italic text-slate-500 dark:text-slate-400">
+                    {m.summary}
+                  </Text>
                 ) : null}
                 {m.tags && m.tags.length > 0 ? (
                   <View className="mt-2 flex-row flex-wrap gap-1.5">
