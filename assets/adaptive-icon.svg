@@ -1,0 +1,48 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- transparent background; Android fills it via adaptiveIcon.backgroundColor -->
+  <!-- glyph scaled slightly to read well inside the 66% safe zone -->
+  <g transform="translate(512 512) scale(1.06) translate(-512 -512)">
+    <g stroke="#ffffff" stroke-opacity="0.45" stroke-width="11" stroke-linecap="round">
+      <line x1="512" y1="512" x2="340" y2="360"/>
+      <line x1="512" y1="512" x2="680" y2="350"/>
+      <line x1="512" y1="512" x2="300" y2="560"/>
+      <line x1="512" y1="512" x2="700" y2="580"/>
+      <line x1="512" y1="512" x2="430" y2="700"/>
+      <line x1="512" y1="512" x2="610" y2="700"/>
+      <line x1="512" y1="512" x2="512" y2="300"/>
+      <line x1="340" y1="360" x2="512" y2="300"/>
+      <line x1="512" y1="300" x2="680" y2="350"/>
+      <line x1="340" y1="360" x2="300" y2="560"/>
+      <line x1="680" y1="350" x2="700" y2="580"/>
+      <line x1="300" y1="560" x2="430" y2="700"/>
+      <line x1="700" y1="580" x2="610" y2="700"/>
+      <line x1="430" y1="700" x2="610" y2="700"/>
+    </g>
+    <g fill="#ffffff" fill-opacity="0.25" filter="url(#soft)">
+      <circle cx="512" cy="512" r="84"/>
+      <circle cx="512" cy="300" r="54"/>
+      <circle cx="340" cy="360" r="58"/>
+      <circle cx="680" cy="350" r="62"/>
+      <circle cx="300" cy="560" r="50"/>
+      <circle cx="700" cy="580" r="54"/>
+      <circle cx="430" cy="700" r="52"/>
+      <circle cx="610" cy="700" r="52"/>
+    </g>
+    <g fill="#ffffff">
+      <circle cx="512" cy="512" r="70"/>
+      <circle cx="340" cy="360" r="46"/>
+      <circle cx="680" cy="350" r="50"/>
+      <circle cx="300" cy="560" r="40"/>
+      <circle cx="700" cy="580" r="44"/>
+      <circle cx="430" cy="700" r="42"/>
+      <circle cx="610" cy="700" r="42"/>
+    </g>
+    <circle cx="512" cy="300" r="48" fill="#fbbf24"/>
+  </g>
+</svg>
