@@ -28,7 +28,7 @@ desktop off and the network off. No cloud. No LLM yet.
 | # | Piece | Library / choice | Why this one |
 |---|---|---|---|
 | 1 | **Local store** | **`expo-sqlite`** (official Expo) | zero-friction in Expo; one table holds text + its embedding |
-| 2 | **On-device embeddings** | **`onnxruntime-react-native`** + a small model (e.g. `bge-small-en-v1.5`, int8 ONNX, ~30–130 MB) | turns text into a vector entirely on-device |
+| 2 | **On-device embeddings** | **`react-native-executorch`** — `useTextEmbeddings`, all-MiniLM-L6-v2 (384-dim) | turns text into a vector on-device; same toolkit also runs the Phase 2 LLM (`useLLM`) + Phase 1 OCR (`useOCR`) |
 | 3 | **Capture → local** | extend `app/share.tsx` (the existing "Save to 2brn") | reuse the share-sheet you already have |
 | 4 | **Search screen** | extend `app/more/saved.tsx` | embed the query, rank saved items by cosine similarity, in JS |
 
@@ -54,12 +54,15 @@ Search box  ──embed(query)──►  cosine vs every row  ──►  ranked 
 - Rebuild the dev client: `npm run android`.
 - ✅ **Check:** a temporary debug button inserts one row and logs `getAllMemories().length === 1`.
 
-### Step 2 — On-device embeddings
-- `npx expo install onnxruntime-react-native`. Drop the model file + `tokenizer.json` in `assets/models/`.
-- Create `src/ml/embed.ts`: load the ONNX session **once** (cache it), tokenize, run, **mean-pool +
-  L2-normalize** the output → `embed(text: string): Promise<number[]>`.
-- ✅ **Check:** `embed("hello world")` logs a vector of the model's dim (e.g. 384); calling it twice
-  gives the same vector; two *similar* sentences score high cosine, two *unrelated* ones score low.
+### Step 2 — On-device embeddings ✅ done
+- Installed `react-native-executorch` + `react-native-executorch-expo-resource-fetcher` +
+  `expo-file-system` + `expo-asset`; call `initExecutorch({ resourceFetcher: ExpoResourceFetcher })`
+  once at startup. Requires the New Architecture (already on) and Android 13+.
+- Embeddings come from the **`useTextEmbeddings`** hook (`models.text_embedding.all_minilm_l6_v2()`);
+  `forward(text)` resolves to a 384-dim `Float32Array`. There is no imperative API, so screens embed via
+  the hook (shared through a small context in Steps 3–4). `src/ml/similarity.ts` holds a pure,
+  unit-tested `cosineSimilarity`; `src/ml/embeddings.ts` centralizes the model choice.
+- ✅ **Verified on-device:** `dim=384`, similar sentences ≈ **0.61**, unrelated ≈ **0.01**.
 
 ### Step 3 — Wire capture into the local store
 - In `app/share.tsx`, on confirm: `embed(text)` → `insertMemory({...})` **locally first**.
@@ -98,14 +101,14 @@ Search box  ──embed(query)──►  cosine vs every row  ──►  ranked 
 - Native modules need a **dev client** and a clean prebuild. After a **clean** prebuild
   (`expo prebuild --clean`), restore the two files Expo clobbers:
   `git checkout -- expo-env.d.ts tsconfig.json` (see [`PARITY.md` appendix](./PARITY.md#appendix--buildenvironment-gotchas-discovered)).
-- The model file is large — `app.json`'s `assetBundlePatterns: ["**/*"]` already bundles `assets/**`, so
-  it ships, but expect a bigger APK and a ~1–2 s first-call model load (cache the session).
+- The embedding model (~90 MB) is **downloaded on first launch** by ExecuTorch's resource fetcher and
+  cached on-device — it is *not* bundled, so the APK stays small, but the first run needs network once.
 - Keep the embedding **model identical** to whatever you'll use later, so Phase 2/3 vectors stay
   comparable (don't re-embed everything when you add the LLM).
 
 ## Suggested commit slices (Conventional Commits)
 
 1. `chore(mobile): add expo-sqlite local memory store`
-2. `feat(mobile): on-device text embeddings (onnxruntime + bge-small)`
+2. `feat(mobile): on-device text embeddings (react-native-executorch + MiniLM)`
 3. `feat(mobile): save shared notes to the local store, embedded`
 4. `feat(mobile): offline semantic search over saved items`
