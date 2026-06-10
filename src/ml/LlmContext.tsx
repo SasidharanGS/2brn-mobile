@@ -5,12 +5,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLLM } from 'react-native-executorch'
 
+import { buildEnrichMessages, type Enrichment, parseEnrichment } from './enrich'
 import { LLM_MODEL } from './llm'
 import { type AnswerSource, buildAnswerMessages } from './prompt'
 
 export interface LlmApi {
   /** Answer a question grounded in the given retrieved notes. Loads the model on first call. */
   answer: (question: string, sources: readonly AnswerSource[]) => Promise<string>
+  /** Summarize + tag a captured note (Phase 2B auto-enrich). Loads the model on first call. */
+  enrich: (text: string) => Promise<Enrichment>
   /** Optional warm-up: start downloading/loading the model before it's needed. */
   preload: () => void
   /** True once the model is downloaded + loaded and answer() can run. */
@@ -53,21 +56,36 @@ export function LlmProvider({ children }: { children: ReactNode }) {
 
   const preload = useCallback(() => setEnabled(true), [])
 
-  const answer = useCallback(async (question: string, sources: readonly AnswerSource[]) => {
-    if (!llmRef.current.isReady) {
-      setEnabled(true) // kick off the lazy load
-      await new Promise<void>((resolve, reject) => {
-        if (llmRef.current.error) reject(llmRef.current.error)
-        else waitersRef.current.push({ resolve, reject })
-      })
-    }
-    // generate() is stateless (no conversation context), exactly what RAG wants.
-    const text = await llmRef.current.generate(buildAnswerMessages(question, sources))
-    return text.trim()
+  // Lazy-load the model (once) and resolve when it's ready to generate.
+  const ensureLoaded = useCallback(async () => {
+    if (llmRef.current.isReady) return
+    setEnabled(true)
+    await new Promise<void>((resolve, reject) => {
+      if (llmRef.current.error) reject(llmRef.current.error)
+      else waitersRef.current.push({ resolve, reject })
+    })
   }, [])
+
+  // generate() is stateless (no conversation context), exactly what RAG + enrich want.
+  const answer = useCallback(
+    async (question: string, sources: readonly AnswerSource[]) => {
+      await ensureLoaded()
+      return (await llmRef.current.generate(buildAnswerMessages(question, sources))).trim()
+    },
+    [ensureLoaded],
+  )
+
+  const enrich = useCallback(
+    async (text: string) => {
+      await ensureLoaded()
+      return parseEnrichment(await llmRef.current.generate(buildEnrichMessages(text)))
+    },
+    [ensureLoaded],
+  )
 
   const value: LlmApi = {
     answer,
+    enrich,
     preload,
     isReady: llm.isReady,
     isLoading: enabled && !llm.isReady && !llm.error,

@@ -13,6 +13,8 @@ export interface LocalMemory {
   sourceUrl: string | null
   createdAt: string // ISO-8601 (UTC)
   embedding: number[] | null
+  summary: string | null // LLM one-line summary (Phase 2B); null until enriched
+  tags: string[] | null // LLM topic tags (Phase 2B); null until enriched
 }
 
 export interface NewMemory {
@@ -32,6 +34,8 @@ interface MemoryRow {
   source_url: string | null
   created_at: string
   embedding: string | null
+  summary: string | null
+  tags: string | null
 }
 
 const DB_NAME = 'twobrn.db'
@@ -52,9 +56,16 @@ function getDb(): Promise<SQLite.SQLiteDatabase> {
           source TEXT NOT NULL DEFAULT 'mobile',
           source_url TEXT,
           created_at TEXT NOT NULL,
-          embedding TEXT
+          embedding TEXT,
+          summary TEXT,
+          tags TEXT
         );
       `)
+      // Migrate older DBs (pre-Phase-2B) that lack the enrichment columns.
+      const cols = await db.getAllAsync<{ name: string }>('PRAGMA table_info(memories)')
+      const have = new Set(cols.map((c) => c.name))
+      if (!have.has('summary')) await db.execAsync('ALTER TABLE memories ADD COLUMN summary TEXT')
+      if (!have.has('tags')) await db.execAsync('ALTER TABLE memories ADD COLUMN tags TEXT')
       return db
     })()
   }
@@ -70,6 +81,8 @@ function rowToMemory(r: MemoryRow): LocalMemory {
     sourceUrl: r.source_url,
     createdAt: r.created_at,
     embedding: r.embedding ? (JSON.parse(r.embedding) as number[]) : null,
+    summary: r.summary,
+    tags: r.tags ? (JSON.parse(r.tags) as string[]) : null,
   }
 }
 
@@ -111,6 +124,16 @@ export async function countMemories(): Promise<number> {
 export async function deleteMemory(id: number): Promise<void> {
   const db = await getDb()
   await db.runAsync('DELETE FROM memories WHERE id = ?', [id])
+}
+
+/** Store the LLM-generated summary + tags for a memory (Phase 2B auto-enrich). */
+export async function updateMemoryEnrichment(id: number, summary: string, tags: string[]): Promise<void> {
+  const db = await getDb()
+  await db.runAsync('UPDATE memories SET summary = ?, tags = ? WHERE id = ?', [
+    summary || null,
+    tags.length ? JSON.stringify(tags) : null,
+    id,
+  ])
 }
 
 /**
