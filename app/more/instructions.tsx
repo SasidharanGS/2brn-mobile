@@ -27,13 +27,20 @@ export default function InstructionsScreen() {
       void invalidate()
     },
   })
+  // Editing an instruction's title/body — closes the form on success.
   const update = useMutation({
-    mutationFn: (v: { id: number; title?: string; body?: string; enabled?: boolean }) =>
-      api.updateInstruction(v.id, { title: v.title, body: v.body, enabled: v.enabled }),
+    mutationFn: (v: { id: number; title: string; body: string }) =>
+      api.updateInstruction(v.id, { title: v.title, body: v.body }),
     onSuccess: () => {
       setEditing(null)
       void invalidate()
     },
+  })
+  // Inline enable/disable toggle — independent of the edit form, so flipping a row
+  // never closes an open editor and its pending state never lights the Save button.
+  const toggle = useMutation({
+    mutationFn: (v: { id: number; enabled: boolean }) => api.updateInstruction(v.id, { enabled: v.enabled }),
+    onSuccess: invalidate,
   })
   const del = useMutation({
     mutationFn: (id: number) => api.deleteInstruction(id),
@@ -122,7 +129,7 @@ export default function InstructionsScreen() {
                 <Text className="flex-1 text-base font-semibold text-slate-900 dark:text-slate-100">{it.title}</Text>
                 <Switch
                   value={it.enabled}
-                  onValueChange={(enabled) => update.mutate({ id: it.id, enabled })}
+                  onValueChange={(enabled) => toggle.mutate({ id: it.id, enabled })}
                 />
               </View>
               <Text className="mt-1 text-sm text-slate-600 dark:text-slate-300">{it.body}</Text>
