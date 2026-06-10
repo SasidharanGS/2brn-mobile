@@ -145,6 +145,13 @@ export default function PairScreen() {
           <Text className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">Connecting…</Text>
         ) : null}
         {error ? <Text className="mt-4 text-center text-sm text-red-500">{error}</Text> : null}
+
+        <Text
+          onPress={() => router.push('/memories')}
+          className="mt-6 text-center text-sm font-medium text-primary"
+        >
+          Use on this phone without a desktop →
+        </Text>
       </ScrollView>
     </KeyboardAvoidingView>
   )

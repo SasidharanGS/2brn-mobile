@@ -13,6 +13,7 @@ import { queryClient } from '@/api/queryClient'
 import { ConnectionProvider } from '@/connection/ConnectionContext'
 import { deleteMemory, getAllMemories, insertMemory } from '@/db/local'
 import { EmbeddingsProvider, useEmbeddings } from '@/ml/EmbeddingsContext'
+import { rankBySimilarity } from '@/ml/search'
 
 // Wire ExecuTorch's on-device model runtime to Expo's file system (once, at startup).
 initExecutorch({ resourceFetcher: ExpoResourceFetcher })
@@ -32,22 +33,31 @@ function ShareIntentGate() {
   return null
 }
 
-/** Phase 0 (Steps 1–3): dev-only end-to-end check — embed a sentence, store it with
- *  its vector, read it back, then clean up. Logs to Metro / logcat once the model loads. */
-function PipelineSelfTest() {
+/** Phase 0 (Steps 1–4): dev-only money-shot check — seed a few topical memories,
+ *  search by meaning, confirm the relevant one ranks first, then clean up.
+ *  Logs to Metro / logcat once the model loads. */
+function SearchSelfTest() {
   const { embed, isReady } = useEmbeddings()
   useEffect(() => {
     if (!isReady) return
     void (async () => {
+      const seed = [
+        'Notes on database pricing tiers and monthly cost',
+        'Sourdough bread recipe with an overnight starter',
+        'Q3 product roadmap planning meeting',
+      ]
+      const ids: number[] = []
       try {
-        const vec = await embed('pipeline self-test')
-        const id = await insertMemory({ text: 'pipeline self-test', source: 'selftest', embedding: vec })
-        const rows = await getAllMemories()
-        const storedDim = rows.find((r) => r.id === id)?.embedding?.length ?? 0
-        console.log(`[2brn-pipeline-selftest] embedDim=${vec.length} storedDim=${storedDim} rows=${rows.length}`)
-        await deleteMemory(id)
+        for (const text of seed) {
+          ids.push(await insertMemory({ text, source: 'selftest', embedding: await embed(text) }))
+        }
+        const hits = rankBySimilarity(await getAllMemories(), await embed('how much does the database cost'))
+        const top = hits[0]
+        console.log(`[2brn-search-selftest] top="${top?.memory.text.slice(0, 30)}" score=${top?.score.toFixed(3)}`)
       } catch (e) {
-        console.log('[2brn-pipeline-selftest] FAIL', e)
+        console.log('[2brn-search-selftest] FAIL', e)
+      } finally {
+        for (const id of ids) await deleteMemory(id)
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +74,7 @@ export default function RootLayout() {
             <EmbeddingsProvider>
               <StatusBar style="auto" />
               <ShareIntentGate />
-              {__DEV__ ? <PipelineSelfTest /> : null}
+              {__DEV__ ? <SearchSelfTest /> : null}
               <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
                 <Stack.Screen name="share" options={{ presentation: 'modal' }} />
               </Stack>
