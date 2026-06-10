@@ -13,6 +13,7 @@ import { queryClient } from '@/api/queryClient'
 import { ConnectionProvider } from '@/connection/ConnectionContext'
 import { deleteMemory, getAllMemories, insertMemory } from '@/db/local'
 import { EmbeddingsProvider, useEmbeddings } from '@/ml/EmbeddingsContext'
+import { OcrProvider } from '@/ml/OcrContext'
 import { rankBySimilarity } from '@/ml/search'
 
 // Wire ExecuTorch's on-device model runtime to Expo's file system (once, at startup).
@@ -72,12 +73,14 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <ConnectionProvider>
             <EmbeddingsProvider>
-              <StatusBar style="auto" />
-              <ShareIntentGate />
-              {__DEV__ ? <SearchSelfTest /> : null}
-              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-                <Stack.Screen name="share" options={{ presentation: 'modal' }} />
-              </Stack>
+              <OcrProvider>
+                <StatusBar style="auto" />
+                <ShareIntentGate />
+                {__DEV__ ? <SearchSelfTest /> : null}
+                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+                  <Stack.Screen name="share" options={{ presentation: 'modal' }} />
+                </Stack>
+              </OcrProvider>
             </EmbeddingsProvider>
           </ConnectionProvider>
         </QueryClientProvider>
