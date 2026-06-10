@@ -5,8 +5,9 @@ import { Alert, Pressable, Switch, Text, TextInput, View } from 'react-native'
 
 import { queryKeys } from '@/api/queryKeys'
 import { Header } from '@/components/Header'
+import { QueryState } from '@/components/QueryState'
 import { Screen } from '@/components/Screen'
-import { EmptyState, ErrorState, Loading } from '@/components/states'
+import { EmptyState } from '@/components/states'
 import { Button, Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useInstructions } from '@/hooks/queries'
@@ -39,7 +40,8 @@ export default function InstructionsScreen() {
   // Inline enable/disable toggle — independent of the edit form, so flipping a row
   // never closes an open editor and its pending state never lights the Save button.
   const toggle = useMutation({
-    mutationFn: (v: { id: number; enabled: boolean }) => api.updateInstruction(v.id, { enabled: v.enabled }),
+    mutationFn: (v: { id: number; enabled: boolean }) =>
+      api.updateInstruction(v.id, { enabled: v.enabled }),
     onSuccess: invalidate,
   })
   const del = useMutation({
@@ -82,7 +84,12 @@ export default function InstructionsScreen() {
           </Pressable>
         }
       />
-      <Screen scroll topInset={false} refreshing={q.isRefetching} onRefresh={() => void q.refetch()}>
+      <Screen
+        scroll
+        topInset={false}
+        refreshing={q.isRefetching}
+        onRefresh={() => void q.refetch()}
+      >
         {editing ? (
           <Card className="mb-4">
             <TextInput
@@ -112,46 +119,50 @@ export default function InstructionsScreen() {
           </Card>
         ) : null}
 
-        {q.isLoading ? (
-          <Loading />
-        ) : q.error ? (
-          <ErrorState error={q.error} onRetry={() => void q.refetch()} />
-        ) : items.length === 0 && !editing ? (
-          <EmptyState
-            title="No instructions"
-            message="Add guidance for how your journal and blog are written. Tap + to start."
-            icon="📝"
-          />
-        ) : (
-          items.map((it) => (
-            <Card key={it.id} className="mb-2">
-              <View className="flex-row items-start justify-between">
-                <Text className="flex-1 text-base font-semibold text-slate-900 dark:text-slate-100">{it.title}</Text>
-                <Switch
-                  value={it.enabled}
-                  onValueChange={(enabled) => toggle.mutate({ id: it.id, enabled })}
-                />
-              </View>
-              <Text className="mt-1 text-sm text-slate-600 dark:text-slate-300">{it.body}</Text>
-              <View className="mt-3 flex-row justify-end gap-1">
-                <Pressable
-                  accessibilityLabel="Edit"
-                  onPress={() => setEditing({ id: it.id, title: it.title, body: it.body })}
-                  className="h-9 w-9 items-center justify-center"
-                >
-                  <Ionicons name="pencil-outline" size={18} color="#60a5fa" />
-                </Pressable>
-                <Pressable
-                  accessibilityLabel="Delete"
-                  onPress={() => confirmDelete(it.id)}
-                  className="h-9 w-9 items-center justify-center"
-                >
-                  <Ionicons name="trash-outline" size={18} color="#f87171" />
-                </Pressable>
-              </View>
-            </Card>
-          ))
-        )}
+        <QueryState
+          query={q}
+          isEmpty={() => items.length === 0 && !editing}
+          empty={
+            <EmptyState
+              title="No instructions"
+              message="Add guidance for how your journal and blog are written. Tap + to start."
+              icon="📝"
+            />
+          }
+        >
+          {() =>
+            items.map((it) => (
+              <Card key={it.id} className="mb-2">
+                <View className="flex-row items-start justify-between">
+                  <Text className="flex-1 text-base font-semibold text-slate-900 dark:text-slate-100">
+                    {it.title}
+                  </Text>
+                  <Switch
+                    value={it.enabled}
+                    onValueChange={(enabled) => toggle.mutate({ id: it.id, enabled })}
+                  />
+                </View>
+                <Text className="mt-1 text-sm text-slate-600 dark:text-slate-300">{it.body}</Text>
+                <View className="mt-3 flex-row justify-end gap-1">
+                  <Pressable
+                    accessibilityLabel="Edit"
+                    onPress={() => setEditing({ id: it.id, title: it.title, body: it.body })}
+                    className="h-9 w-9 items-center justify-center"
+                  >
+                    <Ionicons name="pencil-outline" size={18} color="#60a5fa" />
+                  </Pressable>
+                  <Pressable
+                    accessibilityLabel="Delete"
+                    onPress={() => confirmDelete(it.id)}
+                    className="h-9 w-9 items-center justify-center"
+                  >
+                    <Ionicons name="trash-outline" size={18} color="#f87171" />
+                  </Pressable>
+                </View>
+              </Card>
+            ))
+          }
+        </QueryState>
       </Screen>
     </View>
   )
