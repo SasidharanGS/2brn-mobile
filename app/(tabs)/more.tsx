@@ -45,7 +45,11 @@ const ITEMS: MenuItem[] = [
 function Row({ item }: { item: MenuItem }) {
   return (
     <Link href={item.href} asChild>
-      <Pressable className="flex-row items-center px-4 py-3.5 active:bg-slate-100 dark:active:bg-slate-800">
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={item.label}
+        className="flex-row items-center px-4 py-3.5 active:bg-slate-100 dark:active:bg-slate-800"
+      >
         <Ionicons name={item.icon} size={20} color={PRIMARY} />
         <View className="ml-3 flex-1">
           <Text className="text-base text-slate-900 dark:text-slate-100">{item.label}</Text>

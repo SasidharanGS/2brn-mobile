@@ -14,7 +14,7 @@
     "prebuild": "expo prebuild -p android"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "@expo/metro-runtime": "~56.0.14",
