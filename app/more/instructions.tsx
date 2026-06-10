@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/states'
 import { Button, Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useInstructions } from '@/hooks/queries'
+import { DANGER, MUTED, PRIMARY } from '@/theme/colors'
 
 type Editing = { id: number | 'new'; title: string; body: string } | null
 
@@ -80,7 +81,7 @@ export default function InstructionsScreen() {
             onPress={() => setEditing({ id: 'new', title: '', body: '' })}
             className="h-10 w-10 items-center justify-center"
           >
-            <Ionicons name="add" size={26} color="#60a5fa" />
+            <Ionicons name="add" size={26} color={PRIMARY} />
           </Pressable>
         }
       />
@@ -96,14 +97,14 @@ export default function InstructionsScreen() {
               value={editing.title}
               onChangeText={(t) => setEditing({ ...editing, title: t })}
               placeholder="Title"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               className="mb-2 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             <TextInput
               value={editing.body}
               onChangeText={(t) => setEditing({ ...editing, body: t })}
               placeholder="e.g. Keep journal entries concise and first-person."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               multiline
               textAlignVertical="top"
               className="mb-3 min-h-[90px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
@@ -149,14 +150,14 @@ export default function InstructionsScreen() {
                     onPress={() => setEditing({ id: it.id, title: it.title, body: it.body })}
                     className="h-9 w-9 items-center justify-center"
                   >
-                    <Ionicons name="pencil-outline" size={18} color="#60a5fa" />
+                    <Ionicons name="pencil-outline" size={18} color={PRIMARY} />
                   </Pressable>
                   <Pressable
                     accessibilityLabel="Delete"
                     onPress={() => confirmDelete(it.id)}
                     className="h-9 w-9 items-center justify-center"
                   >
-                    <Ionicons name="trash-outline" size={18} color="#f87171" />
+                    <Ionicons name="trash-outline" size={18} color={DANGER} />
                   </Pressable>
                 </View>
               </Card>

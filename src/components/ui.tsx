@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { ActivityIndicator, Pressable, Text, View } from 'react-native'
 
-import { categoryChip, type ChipColors, stateChip } from '@/theme/colors'
+import { categoryChip, type ChipColors, PRIMARY, stateChip } from '@/theme/colors'
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -17,7 +17,9 @@ export function ScreenTitle({ children, subtitle }: { children: ReactNode; subti
   return (
     <View className="mb-4">
       <Text className="text-3xl font-bold text-slate-900 dark:text-slate-50">{children}</Text>
-      {subtitle ? <Text className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</Text> : null}
+      {subtitle ? (
+        <Text className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</Text>
+      ) : null}
     </View>
   )
 }
@@ -63,7 +65,7 @@ export function Button({
       className={`flex-row items-center justify-center rounded-xl px-4 py-3 ${palette[variant]} ${isDisabled ? 'opacity-50' : ''} ${className ?? ''}`}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'secondary' ? '#60a5fa' : '#fff'} />
+        <ActivityIndicator color={variant === 'secondary' ? PRIMARY : '#fff'} />
       ) : (
         <Text className={`text-base font-semibold ${textColor}`}>{label}</Text>
       )}
@@ -73,7 +75,10 @@ export function Button({
 
 export function Chip({ label, colors }: { label: string; colors: ChipColors }) {
   return (
-    <View style={{ backgroundColor: colors.bg }} className="flex-row items-center self-start rounded-full px-2.5 py-1">
+    <View
+      style={{ backgroundColor: colors.bg }}
+      className="flex-row items-center self-start rounded-full px-2.5 py-1"
+    >
       <View style={{ backgroundColor: colors.dot }} className="mr-1.5 h-1.5 w-1.5 rounded-full" />
       <Text style={{ color: colors.text }} className="text-xs font-semibold capitalize">
         {label}

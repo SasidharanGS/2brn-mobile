@@ -5,7 +5,7 @@ import { useColorScheme } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { Loading } from '@/components/states'
 import { useConnection } from '@/connection/ConnectionContext'
-import { PRIMARY } from '@/theme/colors'
+import { MUTED, PRIMARY } from '@/theme/colors'
 
 export default function TabsLayout() {
   const { state } = useConnection()
@@ -29,7 +29,7 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: dark ? '#64748b' : '#94a3b8',
+        tabBarInactiveTintColor: dark ? '#64748b' : MUTED,
         tabBarStyle: {
           backgroundColor: dark ? '#0b1220' : '#ffffff',
           borderTopColor: dark ? '#1e293b' : '#e2e8f0',
@@ -38,26 +38,48 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Home', tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> }}
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" color={color} size={size} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="chat"
         options={{
           title: 'Chat',
-          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses-outline" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="chatbubble-ellipses-outline" color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="journal"
-        options={{ title: 'Journal', tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" color={color} size={size} /> }}
+        options={{
+          title: 'Journal',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="book-outline" color={color} size={size} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="insights"
-        options={{ title: 'Insights', tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" color={color} size={size} /> }}
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" color={color} size={size} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="more"
-        options={{ title: 'More', tabBarIcon: ({ color, size }) => <Ionicons name="ellipsis-horizontal" color={color} size={size} /> }}
+        options={{
+          title: 'More',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="ellipsis-horizontal" color={color} size={size} />
+          ),
+        }}
       />
     </Tabs>
   )
