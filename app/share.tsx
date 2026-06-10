@@ -7,15 +7,17 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput,
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { queryKeys } from '@/api/queryKeys'
-import { EmptyState } from '@/components/states'
 import { Button, Card } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
+import { insertMemory } from '@/db/local'
+import { useEmbeddings } from '@/ml/EmbeddingsContext'
 
 export default function ShareScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const qc = useQueryClient()
   const { state } = useConnection()
+  const { embed, isReady } = useEmbeddings()
   const { shareIntent, hasShareIntent, resetShareIntent } = useShareIntentContext()
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
@@ -37,12 +39,28 @@ export default function ShareScreen() {
   const client = state.status === 'paired' ? state.client : null
 
   const save = useMutation({
-    mutationFn: () =>
-      client!.ingestNote({
-        text: text.trim(),
-        title: title.trim() || undefined,
-        source_url: url.trim() || undefined,
-      }),
+    mutationFn: async () => {
+      const trimmed = text.trim()
+      const titleVal = title.trim() || undefined
+      const urlVal = url.trim() || undefined
+      // 1) Save on-device first — works offline and without a paired desktop.
+      const embedding = isReady ? await embed(trimmed) : null
+      await insertMemory({
+        text: trimmed,
+        title: titleVal ?? null,
+        sourceUrl: urlVal ?? null,
+        source: hasShareIntent ? 'mobile-share' : 'mobile',
+        embedding,
+      })
+      // 2) Best-effort sync to the desktop when paired (companion behavior).
+      if (client) {
+        try {
+          await client.ingestNote({ text: trimmed, title: titleVal, source_url: urlVal })
+        } catch {
+          // Desktop offline / unreachable — the local copy is already saved.
+        }
+      }
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.sharedNotes })
       resetShareIntent()
@@ -72,25 +90,17 @@ export default function ShareScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
       >
-        {!client ? (
-          <View>
-            <EmptyState
-              title="Connect a device first"
-              message="Pair this phone with your desktop 2brn, then you can save things into your second brain."
-              icon="🔌"
-            />
-            <Button label="Connect" onPress={() => router.replace('/pair')} />
-          </View>
-        ) : done ? (
+        {done ? (
           <View className="items-center py-12">
             <Ionicons name="checkmark-circle" size={56} color="#34d399" />
-            <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">Saved to your brain</Text>
+            <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">Saved to your phone</Text>
             <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
-              It&apos;s now searchable in chat.
+              {client
+                ? "It's saved on-device and synced to your desktop."
+                : "It's saved on-device and searchable offline."}
             </Text>
             <View className="mt-6 w-full gap-3">
-              <Button label="View saved" onPress={() => router.replace('/more/saved')} />
-              <Button label="Done" variant="secondary" onPress={() => router.replace('/(tabs)')} />
+              <Button label="Done" onPress={close} />
             </View>
           </View>
         ) : (
@@ -130,9 +140,14 @@ export default function ShareScreen() {
               className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             {save.isError ? (
-              <Text className="mb-3 text-sm text-red-500">Couldn&apos;t save. Check your connection and try again.</Text>
+              <Text className="mb-3 text-sm text-red-500">Couldn&apos;t save. Please try again.</Text>
             ) : null}
             <Button label="Save to 2brn" loading={save.isPending} disabled={!text.trim()} onPress={() => save.mutate()} />
+            {!client ? (
+              <Text className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
+                Saved on your phone. Connect a desktop later to sync.
+              </Text>
+            ) : null}
           </Card>
         )}
       </ScrollView>
