@@ -9,15 +9,25 @@
 > [`ROADMAP.md`](./ROADMAP.md), [`BUILD.md`](./BUILD.md), [`PAIRING.md`](./PAIRING.md), and the
 > bridge contract in `2brn_desktop/docs/mobile-bridge.md`.
 >
-> _Last updated: 2026-06-10._
+> _Last updated: 2026-06-11._
+>
+> **Implementation status (update):** the on-device pipeline below has since been **built
+> through Phase 2** (capture → OCR/STT → embeddings → SQLite → semantic search → grounded
+> LLM answers). The chosen stack is a **single toolkit, `react-native-executorch`**, for OCR,
+> speech-to-text, embeddings, **and** the LLM — **not** the ML Kit + ONNX + `llama.rn`
+> combination explored in Parts 5/7/8 — with **Llama 3.2 1B (SpinQuant)** as the LLM (not
+> Gemma; executorch ships no Gemma) and **all-MiniLM-L6-v2** for embeddings, over
+> **expo-sqlite + JS cosine**. [`DESIGN.md`](./DESIGN.md) and the code in `src/ml/` are
+> canonical for the tech; treat Parts 5/7/8 here as the original research.
 
 ---
 
 ## TL;DR — read this first
 
-- **Today**, the desktop is the whole brain (capture → OCR → AI inference → RAG, journals, blog,
-  insights, plugins) and the **phone is a thin LAN client**: it *views and controls* the desktop
-  over HTTP and adds **one** capture source of its own — the Android **"Save to 2brn"** share sheet.
+- **Originally**, the desktop was the whole brain and the phone was a **thin LAN client** that
+  viewed/controlled it over HTTP plus one capture source (the Android **"Save to 2brn"** share
+  sheet). That companion layer still exists, but **the phone now runs its own on-device brain**
+  (capture → OCR/STT → embeddings → semantic search → grounded LLM answers); the desktop is optional.
 - **You asked: can the phone do everything the desktop does?** Researched answer: **almost — but not
   the one feature that defines the desktop.** OCR, embeddings, vector search, and *short* AI
   inference all run fine on a modern Android phone. **Continuous, always-on screen capture of other
@@ -25,8 +35,8 @@
   Google Play policy (it's treated as sensitive data; the "read the screen" workaround via
   AccessibilityService is a documented ban risk).
 - **Decided architecture (2026-06): fully _on-device_, with the desktop as an optional companion.**
-  The phone runs the whole light brain itself — mobile-native capture → on-device OCR → a **small
-  local LLM (Gemma)** that tags & answers → an on-phone vector memory — so it works standalone with
+  The phone runs the whole light brain itself — mobile-native capture → on-device OCR/STT → a **small
+  local LLM (Llama 3.2 1B, SpinQuant)** that tags & answers → an on-phone vector memory — so it works standalone with
   **no cloud and no offload**. It stays a **companion**: when paired on the same Wi-Fi it still
   syncs/views the desktop's memory (additive, not required). Target device: **OnePlus 15**; supporting
   weaker phones is a non-goal. Full design in [Part 6](#part-6--decided-architecture).
@@ -118,6 +128,12 @@ Android app (2brn_mobile, Expo/RN)                 Desktop daemon (2brn_desktop,
 is **macOS-only** (launchd plist); no tray, no Windows/Linux autostart.
 
 ### 2B. Mobile app (`2brn_mobile`) — what exists today
+
+> **Note (2026-06):** the inventory below describes the original *companion* surface. Since
+> then the **on-device brain** (Phases 0–2) has been built — the phone now does its own
+> capture, OCR, STT, embeddings, semantic search, and LLM answers (see the status banner up
+> top and [`DESIGN.md`](./DESIGN.md)). The "pure client / no inference of its own" lines below
+> are historical.
 
 **Screens** (`app/`): Home (`(tabs)/index`), Chat (`(tabs)/chat`), Journal, Insights, More →
 {Blog, Timeline, Instructions, Saved, Settings}; plus `pair.tsx` (QR + manual pairing) and
@@ -253,12 +269,14 @@ signals instead.
 ### The on-device pipeline (everything on the phone)
 
 ```
-mobile-native capture → on-device OCR (ML Kit) → small local LLM (Gemma) tags/summarizes
-   → on-phone vector memory (start: expo-sqlite + JS cosine) → you ask → the same LLM answers
+mobile-native capture → on-device OCR/STT (executorch) → small local LLM (Llama 3.2 1B) tags/summarizes
+   → on-phone vector memory (expo-sqlite + JS cosine) → you ask → the same LLM answers
 ```
 
 The **local LLM is the single engine** for both enriching captures and answering questions; embeddings
-are generated on-device (ONNX). **Nothing leaves the phone.** This mirrors the desktop pipeline, shrunk.
+are generated on-device (all-MiniLM-L6-v2). All four models — OCR, STT, embeddings, LLM — run through
+the one **`react-native-executorch`** toolkit. **Nothing leaves the phone.** This mirrors the desktop
+pipeline, shrunk.
 
 ### The companion contract (kept — additive, never required)
 
@@ -278,7 +296,7 @@ so "keep the companion behavior" mostly means *don't remove what's there* and ad
 ### Explicitly dropped for simplicity
 
 Cloud/desktop **inference fallback**; **device-capability tiering**; **Gemini-Nano-vs-bundle** branching
-(we just bundle one Gemma model). **Still off the table:** continuous screen capture (sideloaded
+(we bundle one model — Llama 3.2 1B via executorch). **Still off the table:** continuous screen capture (sideloaded
 "personal mode" only) and **MCP plugins** (desktop-only — Android can't fork local processes).
 
 ---
@@ -289,27 +307,31 @@ Cloud/desktop **inference fallback**; **device-capability tiering**; **Gemini-Na
 > `npm run android`. **Build order matters: foundation first, then slot the LLM in** — the model needs
 > data to act on, and you get a working app at every step.
 
-**Phase 0 — On-device capture + memory + search** _(the foundation; no LLM yet)_ → **detailed plan:
+**Phase 0 — On-device capture + memory + search** ✅ _(the foundation; no LLM yet)_ → **detailed plan:
 [`PHASE-0.md`](./PHASE-0.md)**
-- A **local store** (start with **expo-sqlite**) + on-device **embeddings** (ONNX Runtime + a small
-  model). Route the existing **Save to 2brn** share-sheet into the **local** store, embedded on save.
-  A **semantic-search** screen over your saved items — fully offline, no generative LLM yet.
+- A **local store** (**expo-sqlite**) + on-device **embeddings** (all-MiniLM-L6-v2 via
+  **react-native-executorch**). Route the existing **Save to 2brn** share-sheet into the **local**
+  store, embedded on save. A **semantic-search** screen over your saved items — fully offline, no
+  generative LLM yet. _Built and verified on-device._
 - _Why first:_ de-risks the native bits (device DB + on-device ML) before the LLM, and ships a real,
   self-contained feature. Everything later plugs into this.
 
-**Phase 1 — Broaden mobile-native capture** _(the phone's unique value)_
-- Grow capture beyond the share-sheet: quick notes, voice notes (ML Kit speech), notifications (with a
-  one-time consent prompt), app-usage. Run **ML Kit OCR** on shared/captured images. Periodic work via
-  **WorkManager (≥15 min)** + event triggers.
+**Phase 1 — Broaden mobile-native capture** 📵 _(the phone's unique value)_
+- Grow capture beyond the share-sheet: quick notes, voice notes (**Whisper tiny EN** via executorch),
+  images. Run **OCR** (executorch `OCR_ENGLISH`) on shared/captured images. _Built; pending
+  physical-device verification (emulator `SIGILL`)._ (Notifications / app-usage capture remain future
+  work; periodic work would use **WorkManager ≥15 min** + event triggers.)
 
-**Phase 2 — The local LLM engine** _(on-device, Gemma)_
-- Bundle **Gemma 3** (via **MediaPipe LLM Inference** / `llama.rn`). On capture → tag + one-line
-  summary. On a question → write a short answer from the local search hits. This upgrades Phase 0's
-  "search" into real **ask & answer**, all on-device.
+**Phase 2 — The local LLM engine** 📵 _(on-device, Llama 3.2 1B)_
+- Bundle **Llama 3.2 1B (SpinQuant)** via **react-native-executorch** (executorch 0.9 ships no Gemma).
+  On capture → tag + one-line summary (opt-in). On a question → write a short answer from the local
+  search hits. This upgrades Phase 0's "search" into real **ask & answer**, all on-device. _Built;
+  pending physical-device verification._
 
-**Phase 3 — Companion sync + polish** _(the desktop tie-in)_
-- Two-way **memory sync** with the desktop over the LAN (pull desktop activities; push phone captures
-  via `POST /ingest/note`); lightweight on-device daily mobile-journal; dedupe, offline/empty states,
+**Phase 3 — Companion sync + polish** 🟦 _(the desktop tie-in)_
+- On-device-first landing is done (an unpaired phone lands on the on-device home). Still to do: two-way
+  **memory sync** with the desktop over the LAN (pull desktop activities; push phone captures via
+  `POST /ingest/note`); lightweight on-device daily mobile-journal; dedupe, offline/empty states,
   OEM battery-exemption onboarding.
 
 **Avoid / defer:** continuous all-app screen capture in the public app; AccessibilityService screen
@@ -319,16 +341,22 @@ reading; any design assuming reliable sub-15-min background cadence. **MCP plugi
 
 ## Part 8 — React Native / Expo building blocks
 
-| Need | Library / approach | Notes |
+> **What was actually chosen** (see [`DESIGN.md`](./DESIGN.md)): a single toolkit,
+> **`react-native-executorch`**, covers OCR, STT, embeddings, and the LLM — replacing the
+> separate ML Kit / ONNX / `llama.rn` picks first listed here. The vector store stayed
+> **expo-sqlite + JS cosine**. Rows are kept for context and future options.
+
+| Need | Chosen / option | Notes |
 |---|---|---|
 | Dev builds | **Expo Dev Client** (`npm run android`) | required for all native modules |
-| OCR | `@react-native-ml-kit/text-recognition` or `infinitered/react-native-mlkit` | ML Kit v2, Expo-compatible |
-| On-device LLM | `llama.rn` (llama.cpp), MLC bindings, **or a thin Kotlin module** for ML Kit GenAI | Gemini Nano has no official RN wrapper yet |
-| Embeddings | `onnxruntime-react-native` | run BGE/GTE ONNX models |
-| Vector store | **ObjectBox** (official RN support) or sqlite-vec via Expo SQLite | ObjectBox = lowest friction |
-| Periodic work | `expo-task-manager` / `expo-background-task` (WorkManager), or a custom foreground-service module | ≥15-min floor |
-| Notifications capture | custom NotificationListenerService module + disclosure | Phase 1 |
-| (Personal mode) screen capture | `react-native-frame-capture` (MediaProjection, 100 ms–60 s, on-change, background) | sideload only — see policy caveats |
+| OCR | ✅ **react-native-executorch** (`OCR_ENGLISH`) | one toolkit for all on-device models |
+| Speech-to-text | ✅ **react-native-executorch** (`WHISPER_TINY_EN`) | 16 kHz mono |
+| On-device LLM | ✅ **react-native-executorch** (`LLAMA3_2_1B_SPINQUANT`) | executorch ships no Gemma; swap one constant for Qwen/Phi/3B |
+| Embeddings | ✅ **react-native-executorch** (`all-MiniLM-L6-v2`, 384-dim) | replaced the ONNX BGE/GTE plan |
+| Vector store | ✅ **expo-sqlite + JS cosine** | ObjectBox / `sqlite-vec` only if scale demands it |
+| Periodic work | _future:_ `expo-background-task` (WorkManager) | ≥15-min floor |
+| Notifications capture | _future:_ NotificationListenerService module + disclosure | not yet built |
+| (Personal mode) screen capture | _future:_ `react-native-frame-capture` (MediaProjection) | sideload only — see policy caveats |
 
 A first-time mobile dev should plan on ~**2–4 small custom Kotlin modules / config plugins**
 (foreground service + capture wiring, ML Kit GenAI) plus the community libs above.
