@@ -15,6 +15,7 @@ import { deleteMemory, getAllMemories, insertMemory } from '@/db/local'
 import { EmbeddingsProvider, useEmbeddings } from '@/ml/EmbeddingsContext'
 import { OcrProvider } from '@/ml/OcrContext'
 import { rankBySimilarity } from '@/ml/search'
+import { SttProvider } from '@/ml/SttContext'
 
 // Wire ExecuTorch's on-device model runtime to Expo's file system (once, at startup).
 initExecutorch({ resourceFetcher: ExpoResourceFetcher })
@@ -74,12 +75,14 @@ export default function RootLayout() {
           <ConnectionProvider>
             <EmbeddingsProvider>
               <OcrProvider>
-                <StatusBar style="auto" />
-                <ShareIntentGate />
-                {__DEV__ ? <SearchSelfTest /> : null}
-                <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
-                  <Stack.Screen name="share" options={{ presentation: 'modal' }} />
-                </Stack>
+                <SttProvider>
+                  <StatusBar style="auto" />
+                  <ShareIntentGate />
+                  {__DEV__ ? <SearchSelfTest /> : null}
+                  <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+                    <Stack.Screen name="share" options={{ presentation: 'modal' }} />
+                  </Stack>
+                </SttProvider>
               </OcrProvider>
             </EmbeddingsProvider>
           </ConnectionProvider>
