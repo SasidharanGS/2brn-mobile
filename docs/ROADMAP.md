@@ -1,7 +1,7 @@
 # 2brn Mobile — Roadmap & Progress
 
 > The "where are we?" file. Each phase has a clear exit criterion. Checkboxes reflect
-> work that has actually landed (verified, committed locally — never pushed). See
+> work that has actually landed (verified and committed locally). See
 > [`DESIGN.md`](./DESIGN.md) for the design and [`DECISIONS.md`](./DECISIONS.md) for
 > the rationale behind autonomous choices.
 
@@ -73,7 +73,8 @@
 
 ### Current status
 **v1 is feature-complete and verified.** All screens build and bundle; the daemon
-bridge is implemented and tested. Owner-only follow-ups: produce the APK (needs the
-Android SDK or an Expo/EAS login — see `BUILD.md`), optionally add the desktop QR panel
-and a launcher icon, and revisit component render tests when RTL stabilizes on RN 0.85.
-Nothing has been pushed to any remote.
+bridge is implemented and tested. The daemon bridge has since been **merged into `main`
+and pushed** (`origin/main`); the **mobile repo is still local-only** (no remote yet).
+Owner-only follow-ups: produce the APK (needs the Android SDK or an Expo/EAS login — see
+`BUILD.md`), give the mobile repo a remote, optionally add the desktop QR panel and a
+launcher icon, and revisit component render tests when RTL stabilizes on RN 0.85.
