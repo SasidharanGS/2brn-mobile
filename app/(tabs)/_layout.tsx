@@ -19,7 +19,9 @@ export default function TabsLayout() {
     )
   }
   if (state.status === 'unpaired') {
-    return <Redirect href="/pair" />
+    // On-device-first: an unpaired phone is fully usable on its own, so land on
+    // the on-device home. Pairing a desktop is opt-in from there. (Phase 3)
+    return <Redirect href="/memories" />
   }
 
   return (
