@@ -15,7 +15,7 @@
       "package": "com.twobrn.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4f46e5"
+        "backgroundColor": "#ffffff"
       },
       "permissions": [
         "android.permission.CAMERA"
