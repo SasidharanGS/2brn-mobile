@@ -105,8 +105,8 @@ export default function SettingsScreen() {
         <Card>
           <Row label="App version" value={Constants.expoConfig?.version ?? '0.1.0'} />
           <Text className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            2brn mobile is a companion to the local-first 2brn desktop app. It never sends your data anywhere
-            except your own paired desktop.
+            2brn keeps your captures on your phone — embedded, searchable, and answered on-device. A desktop is
+            optional; when paired it syncs over your local network, and nothing leaves it.
           </Text>
           <Text
             onPress={() => void Linking.openURL('https://github.com/SasidharanGS/2brn')}
@@ -115,6 +115,22 @@ export default function SettingsScreen() {
             github.com/SasidharanGS/2brn
           </Text>
         </Card>
+
+        {__DEV__ ? (
+          <>
+            <SectionTitle>Developer</SectionTitle>
+            <Card>
+              <Text className="mb-2 text-sm text-slate-600 dark:text-slate-300">
+                Verify the on-device models run on this device.
+              </Text>
+              <Button
+                label="On-device model smoke test"
+                variant="secondary"
+                onPress={() => router.push('/dev/smoke')}
+              />
+            </Card>
+          </>
+        ) : null}
       </Screen>
     </View>
   )
