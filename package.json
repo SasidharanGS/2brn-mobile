@@ -8,7 +8,7 @@
     "android": "expo run:android",
     "web": "expo start --web",
     "test": "jest",
-    "test:ci": "jest --ci",
+    "test:ci": "jest --ci --coverage",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "prebuild": "expo prebuild -p android"
