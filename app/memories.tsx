@@ -1,8 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
-import { requestRecordingPermissionsAsync, useAudioStream } from 'expo-audio'
-import * as ImagePicker from 'expo-image-picker'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -11,56 +9,36 @@ import {
   ScrollView,
   Switch,
   Text,
-  TextInput,
   View,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Button, Card } from '@/components/ui'
+import { AnswerCard } from '@/components/memories/AnswerCard'
+import { CaptureCard } from '@/components/memories/CaptureCard'
+import { MemoryCard } from '@/components/memories/MemoryCard'
+import { SearchBar } from '@/components/memories/SearchBar'
+import { Button } from '@/components/ui'
 import { deleteMemory, getAllMemories, type LocalMemory } from '@/db/local'
-import { concatFloat32, maxAbsAmplitude, STT_SAMPLE_RATE } from '@/ml/audioWaveform'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
 import { ANSWER_CONTEXT_SIZE } from '@/ml/llm'
 import { useLlm } from '@/ml/LlmContext'
-import { useOcr } from '@/ml/OcrContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
-import { useStt } from '@/ml/SttContext'
-import { useSaveMemory } from '@/ml/useSaveMemory'
 import { getAutoEnrich, setAutoEnrich as persistAutoEnrich } from '@/settings/prefs'
-import { DANGER, MUTED, PRIMARY } from '@/theme/colors'
-import { prettyTime } from '@/utils/date'
+import { MUTED, PRIMARY } from '@/theme/colors'
 
 export default function MemoriesScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { embed, isReady, downloadProgress } = useEmbeddings()
-  const { extractText } = useOcr()
-  const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
   const { answer, isGenerating, downloadProgress: llmDownloadProgress } = useLlm()
-  const saveMemory = useSaveMemory()
 
   const [items, setItems] = useState<LocalMemory[]>([])
   const [autoEnrich, setAutoEnrich] = useState(false)
-  const [draft, setDraft] = useState('')
-  const [adding, setAdding] = useState(false)
-  const [picking, setPicking] = useState(false)
-  const [recording, setRecording] = useState(false)
-  const [transcribing, setTranscribing] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchHit[] | null>(null)
   const [searching, setSearching] = useState(false)
   const [askAnswer, setAskAnswer] = useState<string | null>(null)
   const [asking, setAsking] = useState(false)
-
-  // Mic capture: expo-audio streams float32 PCM at 16 kHz; we collect the chunks
-  // (the stream is stable — only re-created if these constant options change).
-  const chunksRef = useRef<Float32Array[]>([])
-  const { stream } = useAudioStream({
-    sampleRate: STT_SAMPLE_RATE,
-    channels: 1,
-    encoding: 'float32',
-    onBuffer: (buf) => chunksRef.current.push(new Float32Array(buf.data.slice(0))),
-  })
 
   const reload = useCallback(async () => {
     setItems(await getAllMemories())
@@ -76,65 +54,6 @@ export default function MemoriesScreen() {
       cancelled = true
     }
   }, [])
-
-  const add = async () => {
-    const text = draft.trim()
-    if (!text) return
-    setAdding(true)
-    try {
-      // Embed + persist + best-effort enrich (shared with share.tsx); refresh when enriched.
-      await saveMemory({ text, source: 'mobile' }, () => void reload())
-      setDraft('')
-      setQuery('')
-      setResults(null)
-      await reload()
-    } finally {
-      setAdding(false)
-    }
-  }
-
-  // Pick an image (e.g. a screenshot) and OCR it into the draft for review,
-  // so its text can be saved as a searchable memory — fully on-device.
-  const addFromImage = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 })
-    if (res.canceled || !res.assets[0]) return
-    setPicking(true)
-    try {
-      const extracted = await extractText(res.assets[0].uri)
-      if (extracted.trim()) setDraft((prev) => (prev.trim() ? `${prev}\n${extracted}` : extracted))
-    } catch {
-      // OCR failed — leave the draft as-is for manual entry.
-    } finally {
-      setPicking(false)
-    }
-  }
-
-  // Record a voice note, transcribe it on-device, and drop the text into the draft
-  // for review — fully offline. Tap once to start, again to stop + transcribe.
-  const toggleRecord = async () => {
-    if (recording) {
-      stream.stop()
-      setRecording(false)
-      const waveform = concatFloat32(chunksRef.current)
-      chunksRef.current = []
-      if (maxAbsAmplitude(waveform) < 0.01) return // nothing audible captured
-      setTranscribing(true)
-      try {
-        const text = await transcribe(waveform)
-        if (text) setDraft((prev) => (prev.trim() ? `${prev}\n${text}` : text))
-      } catch {
-        // Transcription failed — leave the draft as-is for manual entry.
-      } finally {
-        setTranscribing(false)
-      }
-      return
-    }
-    const perm = await requestRecordingPermissionsAsync()
-    if (!perm.granted) return
-    chunksRef.current = []
-    await stream.start()
-    setRecording(true)
-  }
 
   const runSearch = async () => {
     const q = query.trim()
@@ -223,51 +142,14 @@ export default function MemoriesScreen() {
           </Text>
         ) : null}
 
-        <Card className="mb-4">
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Jot something to remember…"
-            placeholderTextColor={MUTED}
-            multiline
-            textAlignVertical="top"
-            className="mb-3 min-h-[64px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
-          />
-          <Button
-            label="Add to memory"
-            loading={adding}
-            disabled={!draft.trim()}
-            onPress={() => void add()}
-          />
-          <View className="mt-2 flex-row gap-2">
-            <Button
-              label="From image"
-              variant="secondary"
-              className="flex-1"
-              loading={picking}
-              disabled={recording || transcribing}
-              onPress={() => void addFromImage()}
-            />
-            <Button
-              label={recording ? 'Stop' : 'Record'}
-              variant={recording ? 'danger' : 'secondary'}
-              className="flex-1"
-              loading={transcribing}
-              disabled={picking}
-              onPress={() => void toggleRecord()}
-            />
-          </View>
-          {recording ? (
-            <Text className="mt-2 text-center text-xs text-red-500">
-              ● Recording… tap Stop when done
-            </Text>
-          ) : transcribing ? (
-            <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
-              Transcribing on-device…
-              {sttDownloadProgress < 1 ? ` ${Math.round(sttDownloadProgress * 100)}%` : ''}
-            </Text>
-          ) : null}
-        </Card>
+        <CaptureCard
+          onSaved={() => {
+            setQuery('')
+            setResults(null)
+            void reload()
+          }}
+          onReload={() => void reload()}
+        />
 
         <View className="mb-4 flex-row items-center justify-between px-1">
           <View className="flex-1 pr-3">
@@ -287,30 +169,16 @@ export default function MemoriesScreen() {
           />
         </View>
 
-        <View className="mb-3 flex-row items-center rounded-xl border border-slate-300 px-3 dark:border-slate-700">
-          <Ionicons name="search" size={16} color={MUTED} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={() => void runSearch()}
-            returnKeyType="search"
-            placeholder="Search by meaning…"
-            placeholderTextColor={MUTED}
-            className="ml-2 flex-1 py-2 text-slate-900 dark:text-slate-100"
-          />
-          {query ? (
-            <Pressable
-              accessibilityLabel="Clear search"
-              onPress={() => {
-                setQuery('')
-                setResults(null)
-                setAskAnswer(null)
-              }}
-            >
-              <Ionicons name="close-circle" size={16} color={MUTED} />
-            </Pressable>
-          ) : null}
-        </View>
+        <SearchBar
+          value={query}
+          onChangeText={setQuery}
+          onSubmit={() => void runSearch()}
+          onClear={() => {
+            setQuery('')
+            setResults(null)
+            setAskAnswer(null)
+          }}
+        />
 
         {results && results.length > 0 && !askAnswer && !asking ? (
           <Button
@@ -321,30 +189,12 @@ export default function MemoriesScreen() {
           />
         ) : null}
 
-        {asking || askAnswer ? (
-          <Card className="mb-3">
-            <View className="mb-1 flex-row items-center">
-              <Ionicons name="sparkles" size={14} color={PRIMARY} />
-              <Text className="ml-1 text-xs font-semibold uppercase tracking-wider text-primary">
-                Answer
-              </Text>
-            </View>
-            {asking ? (
-              <Text className="text-sm text-slate-400 dark:text-slate-500">
-                {isGenerating
-                  ? 'Thinking…'
-                  : `Loading the on-device model…${llmDownloadProgress < 1 ? ` ${Math.round(llmDownloadProgress * 100)}%` : ''}`}
-              </Text>
-            ) : (
-              <View>
-                <Text className="text-sm text-slate-800 dark:text-slate-200">{askAnswer}</Text>
-                <Text className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
-                  Answered on-device from your notes below.
-                </Text>
-              </View>
-            )}
-          </Card>
-        ) : null}
+        <AnswerCard
+          asking={asking}
+          answer={askAnswer}
+          isGenerating={isGenerating}
+          downloadProgress={llmDownloadProgress}
+        />
 
         {searching ? <ActivityIndicator className="my-4" /> : null}
 
@@ -355,52 +205,14 @@ export default function MemoriesScreen() {
               : 'Nothing saved yet. Add a note above, or share something into 2brn.'}
           </Text>
         ) : (
-          shown.map((m) => {
-            const score = scoreFor(m.id)
-            return (
-              <Card key={m.id} className="mb-2">
-                {m.title ? (
-                  <Text className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-                    {m.title}
-                  </Text>
-                ) : null}
-                <Text numberOfLines={4} className="text-sm text-slate-700 dark:text-slate-300">
-                  {m.text}
-                </Text>
-                {m.summary ? (
-                  <Text className="mt-1.5 text-xs italic text-slate-500 dark:text-slate-400">
-                    {m.summary}
-                  </Text>
-                ) : null}
-                {m.tags && m.tags.length > 0 ? (
-                  <View className="mt-2 flex-row flex-wrap gap-1.5">
-                    {m.tags.map((t) => (
-                      <Text
-                        key={t}
-                        className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                      >
-                        #{t}
-                      </Text>
-                    ))}
-                  </View>
-                ) : null}
-                <View className="mt-2 flex-row items-center justify-between">
-                  <Text className="text-[11px] text-slate-400 dark:text-slate-500">
-                    {prettyTime(m.createdAt)}
-                    {score !== undefined ? ` · ${Math.round(score * 100)}% match` : ''}
-                    {m.embedding ? '' : ' · not indexed'}
-                  </Text>
-                  <Pressable
-                    accessibilityLabel="Delete"
-                    onPress={() => void remove(m.id)}
-                    className="h-8 w-8 items-center justify-center"
-                  >
-                    <Ionicons name="trash-outline" size={18} color={DANGER} />
-                  </Pressable>
-                </View>
-              </Card>
-            )
-          })
+          shown.map((m) => (
+            <MemoryCard
+              key={m.id}
+              memory={m}
+              score={scoreFor(m.id)}
+              onDelete={() => void remove(m.id)}
+            />
+          ))
         )}
       </ScrollView>
     </KeyboardAvoidingView>
