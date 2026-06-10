@@ -2,12 +2,13 @@
 // is the largest model, so it's LAZY-loaded (preventLoad until the first answer/
 // preload) — a user who never asks a question never pays the (~1 GB) download.
 // Screens call useLlm().answer(question, sources) to get a grounded reply.
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, type ReactNode } from 'react'
 import { useLLM } from 'react-native-executorch'
 
 import { buildEnrichMessages, type Enrichment, parseEnrichment } from './enrich'
 import { LLM_MODEL } from './llm'
 import { type AnswerSource, buildAnswerMessages } from './prompt'
+import { useLazyModel } from './useLazyModel'
 
 export interface LlmApi {
   /** Answer a question grounded in the given retrieved notes. Loads the model on first call. */
@@ -31,67 +32,36 @@ export interface LlmApi {
 const LlmContext = createContext<LlmApi | null>(null)
 
 export function LlmProvider({ children }: { children: ReactNode }) {
-  // Don't download until the user actually asks something.
-  const [enabled, setEnabled] = useState(false)
-  const llm = useLLM({ model: LLM_MODEL, preventLoad: !enabled })
-
-  // Latest instance in a ref so the async answer() reads current load state
-  // (updated in an effect, not during render; read only after an await).
-  const llmRef = useRef(llm)
-  useEffect(() => {
-    llmRef.current = llm
+  const { model, modelRef, ensureLoaded, preload, isLoading } = useLazyModel(useLLM, {
+    model: LLM_MODEL,
   })
-
-  // Callers waiting for the model to finish its (one-time) load.
-  const waitersRef = useRef<{ resolve: () => void; reject: (e: unknown) => void }[]>([])
-  useEffect(() => {
-    if (llm.isReady) {
-      waitersRef.current.forEach((w) => w.resolve())
-      waitersRef.current = []
-    } else if (llm.error) {
-      waitersRef.current.forEach((w) => w.reject(llm.error))
-      waitersRef.current = []
-    }
-  }, [llm.isReady, llm.error])
-
-  const preload = useCallback(() => setEnabled(true), [])
-
-  // Lazy-load the model (once) and resolve when it's ready to generate.
-  const ensureLoaded = useCallback(async () => {
-    if (llmRef.current.isReady) return
-    setEnabled(true)
-    await new Promise<void>((resolve, reject) => {
-      if (llmRef.current.error) reject(llmRef.current.error)
-      else waitersRef.current.push({ resolve, reject })
-    })
-  }, [])
 
   // generate() is stateless (no conversation context), exactly what RAG + enrich want.
   const answer = useCallback(
     async (question: string, sources: readonly AnswerSource[]) => {
       await ensureLoaded()
-      return (await llmRef.current.generate(buildAnswerMessages(question, sources))).trim()
+      return (await modelRef.current.generate(buildAnswerMessages(question, sources))).trim()
     },
-    [ensureLoaded],
+    [ensureLoaded, modelRef],
   )
 
   const enrich = useCallback(
     async (text: string) => {
       await ensureLoaded()
-      return parseEnrichment(await llmRef.current.generate(buildEnrichMessages(text)))
+      return parseEnrichment(await modelRef.current.generate(buildEnrichMessages(text)))
     },
-    [ensureLoaded],
+    [ensureLoaded, modelRef],
   )
 
   const value: LlmApi = {
     answer,
     enrich,
     preload,
-    isReady: llm.isReady,
-    isLoading: enabled && !llm.isReady && !llm.error,
-    isGenerating: llm.isGenerating,
-    downloadProgress: llm.downloadProgress,
-    error: llm.error,
+    isReady: model.isReady,
+    isLoading,
+    isGenerating: model.isGenerating,
+    downloadProgress: model.downloadProgress,
+    error: model.error,
   }
   return <LlmContext.Provider value={value}>{children}</LlmContext.Provider>
 }
