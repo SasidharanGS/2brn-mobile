@@ -9,6 +9,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   View,
@@ -24,6 +25,8 @@ import { useLlm } from '@/ml/LlmContext'
 import { useOcr } from '@/ml/OcrContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { useStt } from '@/ml/SttContext'
+import { useAutoEnrich } from '@/ml/useAutoEnrich'
+import { getAutoEnrich, setAutoEnrich as persistAutoEnrich } from '@/settings/prefs'
 import { prettyTime } from '@/utils/date'
 
 export default function MemoriesScreen() {
@@ -33,8 +36,10 @@ export default function MemoriesScreen() {
   const { extractText } = useOcr()
   const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
   const { answer, isGenerating, downloadProgress: llmDownloadProgress } = useLlm()
+  const enrichInBackground = useAutoEnrich()
 
   const [items, setItems] = useState<LocalMemory[]>([])
+  const [autoEnrich, setAutoEnrich] = useState(false)
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
   const [picking, setPicking] = useState(false)
@@ -61,8 +66,14 @@ export default function MemoriesScreen() {
   }, [])
 
   useEffect(() => {
-    // Load saved memories on mount (set state asynchronously, after the fetch).
-    void getAllMemories().then(setItems)
+    // Load saved memories + the auto-enrich preference on mount. Guard against
+    // resolving after an early unmount (the unpaired redirect can mount/unmount fast).
+    let cancelled = false
+    void getAllMemories().then((m) => !cancelled && setItems(m))
+    void getAutoEnrich().then((v) => !cancelled && setAutoEnrich(v))
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const add = async () => {
@@ -71,11 +82,15 @@ export default function MemoriesScreen() {
     setAdding(true)
     try {
       const embedding = isReady ? await embed(text) : null
-      await insertMemory({ text, source: 'mobile', embedding })
+      const id = await insertMemory({ text, source: 'mobile', embedding })
       setDraft('')
       setQuery('')
       setResults(null)
       await reload()
+      // Auto-enrich in the background (best-effort, only if enabled); refresh when done.
+      void enrichInBackground(id, text).then((did) => {
+        if (did) void reload()
+      })
     } finally {
       setAdding(false)
     }
@@ -245,6 +260,22 @@ export default function MemoriesScreen() {
           ) : null}
         </Card>
 
+        <View className="mb-4 flex-row items-center justify-between px-1">
+          <View className="flex-1 pr-3">
+            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-enrich with AI</Text>
+            <Text className="text-xs text-slate-400 dark:text-slate-500">
+              Summarize &amp; tag new notes on-device (downloads a model)
+            </Text>
+          </View>
+          <Switch
+            value={autoEnrich}
+            onValueChange={(v) => {
+              setAutoEnrich(v)
+              void persistAutoEnrich(v)
+            }}
+          />
+        </View>
+
         <View className="mb-3 flex-row items-center rounded-xl border border-slate-300 px-3 dark:border-slate-700">
           <Ionicons name="search" size={16} color="#94a3b8" />
           <TextInput
@@ -319,6 +350,21 @@ export default function MemoriesScreen() {
                 <Text numberOfLines={4} className="text-sm text-slate-700 dark:text-slate-300">
                   {m.text}
                 </Text>
+                {m.summary ? (
+                  <Text className="mt-1.5 text-xs italic text-slate-500 dark:text-slate-400">{m.summary}</Text>
+                ) : null}
+                {m.tags && m.tags.length > 0 ? (
+                  <View className="mt-2 flex-row flex-wrap gap-1.5">
+                    {m.tags.map((t) => (
+                      <Text
+                        key={t}
+                        className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                      >
+                        #{t}
+                      </Text>
+                    ))}
+                  </View>
+                ) : null}
                 <View className="mt-2 flex-row items-center justify-between">
                   <Text className="text-[11px] text-slate-400 dark:text-slate-500">
                     {prettyTime(m.createdAt)}
