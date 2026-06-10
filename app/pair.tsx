@@ -8,6 +8,7 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Button, Card, ScreenTitle } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { buildPairingUrl, parsePairingPayload, type PairingPayload } from '@/connection/pairing'
+import { MUTED } from '@/theme/colors'
 
 export default function PairScreen() {
   const router = useRouter()
@@ -67,7 +68,11 @@ export default function PairScreen() {
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24, paddingHorizontal: 20 }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 24,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 20,
+        }}
       >
         <ScreenTitle subtitle="Open your desktop 2brn → Settings → Connect a phone, enable LAN access, then scan the QR code.">
           Connect a device
@@ -121,7 +126,7 @@ export default function PairScreen() {
               autoCorrect={false}
               keyboardType="url"
               placeholder="http://192.168.1.23:7842"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -134,7 +139,7 @@ export default function PairScreen() {
               autoCorrect={false}
               secureTextEntry
               placeholder="Paste the token from the desktop"
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={MUTED}
               className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
             />
             <Button label="Connect" onPress={onManualSubmit} loading={busy} />
@@ -142,7 +147,9 @@ export default function PairScreen() {
         )}
 
         {busy && mode === 'scan' ? (
-          <Text className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">Connecting…</Text>
+          <Text className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            Connecting…
+          </Text>
         ) : null}
         {error ? <Text className="mt-4 text-center text-sm text-red-500">{error}</Text> : null}
 
