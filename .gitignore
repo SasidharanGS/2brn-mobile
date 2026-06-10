@@ -23,3 +23,8 @@ ios/
 *.log
 .env*.local
 coverage/
+
+# agent / editor local config (never commit — personal)
+AGENTS.md
+.claude/
+.opencode/
