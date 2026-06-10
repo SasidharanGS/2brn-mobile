@@ -123,6 +123,7 @@ export default function SettingsScreen() {
             it.
           </Text>
           <Text
+            accessibilityRole="link"
             onPress={() => void Linking.openURL('https://github.com/SasidharanGS/2brn')}
             className="mt-2 text-sm text-primary"
           >
