@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, Card } from '@/components/ui'
 import { deleteMemory, getAllMemories, insertMemory, type LocalMemory } from '@/db/local'
 import { useEmbeddings } from '@/ml/EmbeddingsContext'
+import { useOcr } from '@/ml/OcrContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { prettyTime } from '@/utils/date'
 
@@ -23,10 +25,12 @@ export default function MemoriesScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { embed, isReady, downloadProgress } = useEmbeddings()
+  const { extractText } = useOcr()
 
   const [items, setItems] = useState<LocalMemory[]>([])
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
+  const [picking, setPicking] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchHit[] | null>(null)
   const [searching, setSearching] = useState(false)
@@ -53,6 +57,22 @@ export default function MemoriesScreen() {
       await reload()
     } finally {
       setAdding(false)
+    }
+  }
+
+  // Pick an image (e.g. a screenshot) and OCR it into the draft for review,
+  // so its text can be saved as a searchable memory — fully on-device.
+  const addFromImage = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 })
+    if (res.canceled || !res.assets[0]) return
+    setPicking(true)
+    try {
+      const extracted = await extractText(res.assets[0].uri)
+      if (extracted.trim()) setDraft((prev) => (prev.trim() ? `${prev}\n${extracted}` : extracted))
+    } catch {
+      // OCR failed — leave the draft as-is for manual entry.
+    } finally {
+      setPicking(false)
     }
   }
 
@@ -116,7 +136,16 @@ export default function MemoriesScreen() {
             textAlignVertical="top"
             className="mb-3 min-h-[64px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
           />
-          <Button label="Add to memory" loading={adding} disabled={!draft.trim()} onPress={() => void add()} />
+          <View className="flex-row gap-2">
+            <Button
+              label="Add to memory"
+              className="flex-1"
+              loading={adding}
+              disabled={!draft.trim()}
+              onPress={() => void add()}
+            />
+            <Button label="From image" variant="secondary" loading={picking} onPress={() => void addFromImage()} />
+          </View>
         </Card>
 
         <View className="mb-3 flex-row items-center rounded-xl border border-slate-300 px-3 dark:border-slate-700">
