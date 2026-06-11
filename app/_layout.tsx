@@ -16,8 +16,16 @@ import { LlmProvider } from '@/ml/LlmContext'
 import { OcrProvider } from '@/ml/OcrContext'
 import { SttProvider } from '@/ml/SttContext'
 
-// Wire ExecuTorch's on-device model runtime to Expo's file system (once, at startup).
-initExecutorch({ resourceFetcher: ExpoResourceFetcher })
+// Wire ExecuTorch's on-device model runtime to Expo's file system. Done from the
+// root layout's mount effect (not as an import-time side effect) so importing this
+// module in tests doesn't touch the native runtime. The guard keeps it once-only
+// across re-renders and StrictMode's double-invoke in dev.
+let executorchWired = false
+function wireExecutorch() {
+  if (executorchWired) return
+  executorchWired = true
+  initExecutorch({ resourceFetcher: ExpoResourceFetcher })
+}
 
 /** When Android delivers a share intent, jump to the compose/confirm screen. */
 function ShareIntentGate() {
@@ -35,6 +43,10 @@ function ShareIntentGate() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    wireExecutorch()
+  }, [])
+
   return (
     <ShareIntentProvider options={{ resetOnBackground: true, debug: false }}>
       <SafeAreaProvider>
