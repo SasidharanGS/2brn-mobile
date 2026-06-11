@@ -78,3 +78,7 @@ Every change should respect these constraints:
 Use the [issue templates](https://github.com/SasidharanGS/2brn-mobile/issues/new/choose).
 For security-sensitive issues, follow [SECURITY.md](SECURITY.md) instead of opening a
 public issue.
+
+When sharing logs or reproductions, **scrub anything private** — Metro, logcat, or adb
+output may contain voice transcripts, OCR text, or captured images you don't want in a
+public issue.
