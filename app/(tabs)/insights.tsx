@@ -8,7 +8,7 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat, StateChip } from '@/components/ui'
 import { useInsightsSummary } from '@/hooks/queries'
 import { categoryChip, PRIMARY, stateChip } from '@/theme/colors'
-import { todayISODate } from '@/utils/date'
+import { fmtDur, todayISODate } from '@/utils/date'
 
 function Meter({ pct, color }: { pct: number; color: string }) {
   return (
@@ -44,7 +44,7 @@ export default function InsightsScreen() {
           <View>
             <Card className="mb-4">
               <View className="flex-row">
-                <Stat label="captures" value={data.total_captures.toLocaleString()} />
+                <Stat label="on screen" value={fmtDur(data.observed_seconds)} />
                 <Stat
                   label="active vs avg"
                   value={`${data.comparison.active.current_pct}%`}
@@ -126,7 +126,7 @@ export default function InsightsScreen() {
                         {r.canonical_summary}
                       </Text>
                       <Text className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                        {r.pct}% · {r.session_count} sessions
+                        ≈{fmtDur(r.approx_seconds)} · {r.occurrences} occurrences
                       </Text>
                     </View>
                   ))}

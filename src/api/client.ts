@@ -7,7 +7,6 @@ import type {
   BlogPost,
   CaptureRecord,
   ConnectionInfo,
-  DailyInsights,
   DaemonStatus,
   InsightsPeriod,
   InsightsSummary,
@@ -156,7 +155,6 @@ export function createHttpClient(cfg: ApiConfig) {
       put<{ ok: boolean }>(`/blog/${date}`, { content }),
 
     // insights
-    getDailyInsights: (date: string) => get<DailyInsights>(`/insights/daily?date=${date}`),
     getInsightsSummary: (date: string, period: InsightsPeriod = 'day') =>
       get<InsightsSummary>(`/insights/summary?date=${date}&period=${period}`),
 
