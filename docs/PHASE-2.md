@@ -51,9 +51,10 @@ note context. It's a **one-constant swap** in `src/ml/llm.ts` (e.g. `LLAMA3_2_3B
 - ✅ typecheck / lint / test green (60 tests; the prompt builder is unit-tested).
 - ✅ JS bundle loads cleanly (full provider tree incl. `LlmProvider`); add → search → the **Ask 2brn**
   button rendering verified on the emulator (note matched at 58%); app stable, embeddings/search intact.
-- ⏳ **Answer generation pending OnePlus 15** — the LLM uses the same instruction path as OCR/Whisper, so
-  it hits the same Apple-Silicon emulator SVE `SIGILL` (and would first pull ~1 GB). Verify a real
-  grounded answer on the device. (See the Branch A caveat in [`PHASE-1.md`](./PHASE-1.md).)
+- ✅ **Answer generation verified on the OnePlus 15** (2026-06-13) — the Llama 3.2 1B LLM generated on
+  real hardware with no `SIGILL` (ExecuTorch logged `Prefill token result numel(): 128256` →
+  `Reached to the end of generation`). First run pulls ~1 GB. The Apple-Silicon emulator SVE `SIGILL`
+  (see the Branch A caveat in [`PHASE-1.md`](./PHASE-1.md)) was emulator-only.
 
 ### Branch B — `feat/llm-enrich` ✅
 
@@ -76,7 +77,9 @@ SIGILLs there.)
 - ✅ typecheck / lint / test green (67 tests; the enrich prompt + parser are unit-tested).
 - ✅ Verified on the emulator: the toggle renders (default off) + persists; saving with it off works with
   no crash; the enriched card (summary + #tags) renders correctly (seeded one sample row to confirm the UI).
-- ⏳ **Enrichment generation pending OnePlus 15** — same Apple-Silicon SVE caveat as the rest of the LLM.
+- ✅ **Enrichment generation verified on the OnePlus 15** (2026-06-13) — shares the LLM path verified
+  above (same `answer()`/`generate()` engine), so on-device summary + tagging runs without the
+  emulator-only SVE `SIGILL`.
 
 ## Out of scope for Phase 2
 - ❌ **Multi-turn chat / conversation memory** → `generate()` is stateless on purpose (one question, one
