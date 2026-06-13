@@ -14,6 +14,12 @@ ios/
 *.apk
 *.aab
 *.keystore
+*.jks
+
+# release signing secret (local upload key + passwords) — never commit; keep only the .example
+# (use credentials/* not credentials/ so git still descends and the negation can re-include the example)
+credentials/*
+!credentials/keystore.properties.example
 
 # metro / bundler
 .metro-health-check*
