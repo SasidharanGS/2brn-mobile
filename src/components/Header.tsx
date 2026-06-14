@@ -22,7 +22,16 @@ export function Header({ title, right }: { title: string; right?: ReactNode }) {
         >
           <Ionicons name="chevron-back" size={26} color={tokens.colors.accent} />
         </Pressable>
-        <Text className="flex-1 text-lg font-semibold text-fg">{title}</Text>
+        <Text
+          className="flex-1 text-lg font-semibold text-fg"
+          style={{
+            fontFamily: tokens.fontSans,
+            textTransform: tokens.lowercase ? 'lowercase' : undefined,
+            fontWeight: tokens.lowercase ? '400' : undefined,
+          }}
+        >
+          {title}
+        </Text>
         {right ? <View className="pr-2">{right}</View> : null}
       </View>
     </View>

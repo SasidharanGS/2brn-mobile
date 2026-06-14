@@ -99,7 +99,16 @@ export default function ChatScreen() {
       className="flex-1 bg-bg"
     >
       <View style={{ paddingTop: insets.top }} className="border-b border-rule px-4 pb-2">
-        <Text className="py-2 text-xl font-bold text-fg">Chat</Text>
+        <Text
+          className="py-2 text-xl font-bold text-fg"
+          style={{
+            fontFamily: tokens.fontSans,
+            textTransform: tokens.lowercase ? 'lowercase' : undefined,
+            fontWeight: tokens.lowercase ? '400' : undefined,
+          }}
+        >
+          Chat
+        </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
           <FilterChip
             label="Today only"
@@ -149,6 +158,7 @@ export default function ChatScreen() {
           placeholderTextColor={tokens.colors.muted}
           multiline
           className="max-h-28 flex-1 rounded-2xl border border-border px-4 py-2.5 text-fg"
+          style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
         />
         <Pressable
           accessibilityRole="button"
@@ -191,23 +201,41 @@ function FilterChip({
   onPress: () => void
   color?: string
 }) {
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
+  const minimal = skin === 'minimal'
+  // Minimal: 3px pill, active = solid accent fill + --bg text (no category hue).
+  // Modern: rounded pill, active = ~15% accent tint (8-digit hex — a var() color
+  // can't take a Tailwind opacity modifier) + accent/category-colored text.
+  const textColor = minimal
+    ? active
+      ? tokens.colors.bg
+      : tokens.colors.muted
+    : active
+      ? (color ?? tokens.colors.accent)
+      : tokens.colors.muted
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className="mr-2 rounded-full border px-3 py-1"
+      className="mr-2 border px-3 py-1"
       style={{
-        // 8-digit hex = accent at ~15% alpha for the active fill (no opacity-modifier
-        // on a var() color, which Tailwind can't alpha-composite).
+        borderRadius: minimal ? tokens.radiusPill : 9999,
         borderColor: active ? tokens.colors.accent : tokens.colors.border,
-        backgroundColor: active ? `${tokens.colors.accent}26` : undefined,
+        backgroundColor: active
+          ? minimal
+            ? tokens.colors.accent
+            : `${tokens.colors.accent}26`
+          : undefined,
       }}
     >
       <Text
-        style={active && color ? { color } : undefined}
-        className={`text-xs font-medium capitalize ${active ? 'text-primary' : 'text-muted'}`}
+        className="text-xs font-medium"
+        style={{
+          color: textColor,
+          fontFamily: tokens.fontSans,
+          textTransform: tokens.lowercase ? 'lowercase' : 'capitalize',
+        }}
       >
         {label}
       </Text>

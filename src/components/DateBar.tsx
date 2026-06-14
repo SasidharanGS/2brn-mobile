@@ -1,12 +1,17 @@
 import { Pressable, Text, View } from 'react-native'
 
+import { useTheme } from '@/theme/ThemeContext'
 import { addDays, isToday, relativeDay, todayISODate } from '@/utils/date'
 
 /** Prev / label / next date navigator. Won't advance past today (date is clamped ≤ today). */
 export function DateBar({ date, onChange }: { date: string; onChange: (d: string) => void }) {
+  const { skin, tokens } = useTheme()
   const nextDisabled = isToday(date)
   return (
-    <View className="mb-4 flex-row items-center justify-between rounded-xl border border-border bg-surface px-1 py-1">
+    <View
+      className="mb-4 flex-row items-center justify-between rounded-xl border border-border bg-surface px-1 py-1"
+      style={skin === 'minimal' ? { borderRadius: tokens.radiusCard } : undefined}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Previous day"

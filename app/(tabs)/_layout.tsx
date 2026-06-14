@@ -33,6 +33,10 @@ export default function TabsLayout() {
           backgroundColor: tokens.colors.surface,
           borderTopColor: tokens.colors.rule,
         },
+        tabBarLabelStyle: {
+          fontFamily: tokens.fontSans,
+          textTransform: tokens.lowercase ? 'lowercase' : undefined,
+        },
       }}
     >
       <Tabs.Screen

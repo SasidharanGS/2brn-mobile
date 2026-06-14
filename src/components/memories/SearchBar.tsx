@@ -15,10 +15,13 @@ export function SearchBar({
   onSubmit: () => void
   onClear: () => void
 }) {
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const muted = tokens.colors.muted
   return (
-    <View className="mb-3 flex-row items-center rounded-xl border border-border px-3">
+    <View
+      className="mb-3 flex-row items-center rounded-xl border border-border px-3"
+      style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
+    >
       <Ionicons name="search" size={16} color={muted} />
       <TextInput
         value={value}
