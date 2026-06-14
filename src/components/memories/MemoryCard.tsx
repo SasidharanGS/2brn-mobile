@@ -19,24 +19,20 @@ export function MemoryCard({
   return (
     <Card className="mb-2">
       {m.title ? (
-        <Text className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-          {m.title}
-        </Text>
+        <Text className="mb-1 text-base font-semibold text-fg">{m.title}</Text>
       ) : null}
-      <Text numberOfLines={4} className="text-sm text-slate-700 dark:text-slate-300">
+      <Text numberOfLines={4} className="text-sm text-fg">
         {m.text}
       </Text>
       {m.summary ? (
-        <Text className="mt-1.5 text-xs italic text-slate-500 dark:text-slate-400">
-          {m.summary}
-        </Text>
+        <Text className="mt-1.5 text-xs italic text-muted">{m.summary}</Text>
       ) : null}
       {m.tags && m.tags.length > 0 ? (
         <View className="mt-2 flex-row flex-wrap gap-1.5">
           {m.tags.map((t) => (
             <Text
               key={t}
-              className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+              className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-muted"
             >
               #{t}
             </Text>
@@ -44,7 +40,7 @@ export function MemoryCard({
         </View>
       ) : null}
       <View className="mt-2 flex-row items-center justify-between">
-        <Text className="text-[11px] text-slate-400 dark:text-slate-500">
+        <Text className="text-[11px] text-muted">
           {prettyTime(m.createdAt)}
           {score !== undefined ? ` · ${Math.round(score * 100)}% match` : ''}
           {m.embedding ? '' : ' · not indexed'}

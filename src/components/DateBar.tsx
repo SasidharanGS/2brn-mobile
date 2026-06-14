@@ -6,14 +6,14 @@ import { addDays, isToday, relativeDay, todayISODate } from '@/utils/date'
 export function DateBar({ date, onChange }: { date: string; onChange: (d: string) => void }) {
   const nextDisabled = isToday(date)
   return (
-    <View className="mb-4 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-1 py-1 dark:border-slate-800 dark:bg-slate-900">
+    <View className="mb-4 flex-row items-center justify-between rounded-xl border border-border bg-surface px-1 py-1">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Previous day"
         onPress={() => onChange(addDays(date, -1))}
         className="px-4 py-2"
       >
-        <Text className="text-xl text-slate-600 dark:text-slate-300">‹</Text>
+        <Text className="text-xl text-muted">‹</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -21,9 +21,7 @@ export function DateBar({ date, onChange }: { date: string; onChange: (d: string
         onPress={() => onChange(todayISODate())}
         className="flex-1 items-center py-2"
       >
-        <Text className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-          {relativeDay(date)}
-        </Text>
+        <Text className="text-sm font-semibold text-fg">{relativeDay(date)}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -32,7 +30,7 @@ export function DateBar({ date, onChange }: { date: string; onChange: (d: string
         onPress={() => onChange(addDays(date, 1))}
         className={`px-4 py-2 ${nextDisabled ? 'opacity-30' : ''}`}
       >
-        <Text className="text-xl text-slate-600 dark:text-slate-300">›</Text>
+        <Text className="text-xl text-muted">›</Text>
       </Pressable>
     </View>
   )

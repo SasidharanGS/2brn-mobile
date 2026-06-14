@@ -1,14 +1,15 @@
 import { ActivityIndicator, Text, View } from 'react-native'
 
 import { ApiError } from '@/api/client'
-import { PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 import { Button } from './ui'
 
 export function Loading({ label }: { label?: string }) {
+  const { tokens } = useTheme()
   return (
     <View className="flex-1 items-center justify-center py-16">
-      <ActivityIndicator size="large" color={PRIMARY} />
-      {label ? <Text className="mt-3 text-sm text-slate-500 dark:text-slate-400">{label}</Text> : null}
+      <ActivityIndicator size="large" color={tokens.colors.accent} />
+      {label ? <Text className="mt-3 text-sm text-muted">{label}</Text> : null}
     </View>
   )
 }
@@ -17,10 +18,8 @@ export function EmptyState({ title, message, icon }: { title: string; message?: 
   return (
     <View className="items-center justify-center px-6 py-16">
       {icon ? <Text className="mb-2 text-4xl">{icon}</Text> : null}
-      <Text className="text-center text-base font-semibold text-slate-700 dark:text-slate-200">{title}</Text>
-      {message ? (
-        <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">{message}</Text>
-      ) : null}
+      <Text className="text-center text-base font-semibold text-fg">{title}</Text>
+      {message ? <Text className="mt-1 text-center text-sm text-muted">{message}</Text> : null}
     </View>
   )
 }
@@ -36,8 +35,8 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   return (
     <View className="items-center justify-center px-6 py-16">
       <Text className="mb-2 text-4xl">{offline ? '📡' : '⚠️'}</Text>
-      <Text className="text-center text-base font-semibold text-slate-700 dark:text-slate-200">{title}</Text>
-      <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">{message}</Text>
+      <Text className="text-center text-base font-semibold text-fg">{title}</Text>
+      <Text className="mt-1 text-center text-sm text-muted">{message}</Text>
       {onRetry ? (
         <View className="mt-4 w-44">
           <Button label="Try again" variant="secondary" onPress={onRetry} />
