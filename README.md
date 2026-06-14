@@ -26,10 +26,11 @@ Everything works with **no desktop and no network**. Nothing leaves the phone by
 
 ## Status
 
-On-device **capture, embeddings, and semantic search** work today. On-device **OCR, voice
-transcription, and LLM answers/enrichment** are implemented and bundle, but are **pending
-verification on a physical device** — the inference runtime can't run on the Apple-Silicon
-emulator (it crashes with `SIGILL`). The target device is a flagship Android phone; see
+On-device **capture, embeddings, semantic search, OCR, voice transcription, and LLM
+answers/enrichment** all work today — **verified on a physical device** (OnePlus 15,
+Android 16, `arm64-v8a`) on 2026-06-13. The inference runtime can't run on the Apple-Silicon
+emulator (it crashes with `SIGILL` because the emulator falsely advertises SVE), so a flagship
+Android phone is the target and the definition of done; see
 [`docs/PHASE-1.md`](docs/PHASE-1.md) / [`docs/PHASE-2.md`](docs/PHASE-2.md).
 
 ## On-device pipeline

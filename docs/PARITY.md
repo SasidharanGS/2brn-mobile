@@ -316,17 +316,18 @@ Cloud/desktop **inference fallback**; **device-capability tiering**; **Gemini-Na
 - _Why first:_ de-risks the native bits (device DB + on-device ML) before the LLM, and ships a real,
   self-contained feature. Everything later plugs into this.
 
-**Phase 1 — Broaden mobile-native capture** 📵 _(the phone's unique value)_
+**Phase 1 — Broaden mobile-native capture** ✅ _(the phone's unique value)_
 - Grow capture beyond the share-sheet: quick notes, voice notes (**Whisper tiny EN** via executorch),
-  images. Run **OCR** (executorch `OCR_ENGLISH`) on shared/captured images. _Built; pending
-  physical-device verification (emulator `SIGILL`)._ (Notifications / app-usage capture remain future
-  work; periodic work would use **WorkManager ≥15 min** + event triggers.)
+  images. Run **OCR** (executorch `OCR_ENGLISH`) on shared/captured images. _Built and verified on the
+  OnePlus 15 (2026-06-13) — OCR + STT run on real hardware; the emulator `SIGILL` was emulator-only._
+  (Notifications / app-usage capture remain future work; periodic work would use **WorkManager ≥15 min**
+  + event triggers.)
 
-**Phase 2 — The local LLM engine** 📵 _(on-device, Llama 3.2 1B)_
+**Phase 2 — The local LLM engine** ✅ _(on-device, Llama 3.2 1B)_
 - Bundle **Llama 3.2 1B (SpinQuant)** via **react-native-executorch** (executorch 0.9 ships no Gemma).
   On capture → tag + one-line summary (opt-in). On a question → write a short answer from the local
-  search hits. This upgrades Phase 0's "search" into real **ask & answer**, all on-device. _Built;
-  pending physical-device verification._
+  search hits. This upgrades Phase 0's "search" into real **ask & answer**, all on-device. _Built and
+  verified on the OnePlus 15 (2026-06-13) — LLM answers + enrich run on real hardware (no `SIGILL`)._
 
 **Phase 3 — Companion sync + polish** 🟦 _(the desktop tie-in)_
 - On-device-first landing is done (an unpaired phone lands on the on-device home). Still to do: two-way

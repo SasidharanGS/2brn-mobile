@@ -217,9 +217,11 @@ covers pairing); iOS.
   exercise the SQLite store against a temp DB.
 - **Dev harness:** `EXPO_PUBLIC_MOCK=1` backs every companion screen with fixtures (used by
   tests and `npm run web`).
-- **On-device verification:** OCR/STT/LLM **must be verified on a physical device** — they
-  crash with `SIGILL` on the Apple-Silicon emulator (which mis-advertises SVE). `expo export`
-  proves the app *bundles*, not that inference *runs*.
+- **On-device verification:** OCR/STT/LLM are **verified on a physical device** — the OnePlus 15
+  (model `CPH2745`, Android 16/API 36, `arm64-v8a`) on 2026-06-13, with no `SIGILL`. They crash
+  with `SIGILL` on the Apple-Silicon emulator (which mis-advertises SVE), so a real device remains
+  the definition of done for new model work. `expo export` proves the app *bundles*, not that
+  inference *runs*.
 - **CI:** GitHub Actions — typecheck + lint + test on push/PR.
 - **Build (Android):** `npx expo prebuild -p android` then `./gradlew assembleRelease` (with
   the Android SDK + JDK 17), or `eas build -p android --profile preview` (cloud). See
@@ -230,7 +232,7 @@ covers pairing); iOS.
 
 | Risk | Mitigation |
 |---|---|
-| On-device inference unverified (emulator `SIGILL`) | Treat physical-device verification as the definition of done for OCR/STT/LLM; scope public claims to what's verified (search). |
+| On-device inference (emulator `SIGILL`) | **Resolved** — verified on the OnePlus 15 (2026-06-13) with no `SIGILL`; the crash was emulator-only (AVD fakes SVE). Physical-device verification remains the definition of done for new model work. |
 | Large model downloads (~1 GB LLM) | Lazy-load on first use; show download progress; auto-enrich is opt-in and off by default. |
 | RN streaming fetch quirks (companion chat) | `expo/fetch` + buffered fallback; covered by a parser unit test. |
 | Native modules need a dev build (no Expo Go) | Use a dev-client/prebuild build; mock mode covers UI review without one. |

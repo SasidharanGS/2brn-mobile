@@ -41,17 +41,17 @@ A self-sufficient pipeline that runs entirely on the phone, using a single toolk
 - [x] Semantic-search UI over saved memories — fully offline
 - [x] **Verified on-device** (embeddings + search run on real hardware)
 
-### Phase 1 — Image (OCR) & voice (STT) capture 📵
+### Phase 1 — Image (OCR) & voice (STT) capture ✅
 - [x] On-device OCR (`OCR_ENGLISH`) via `OcrContext`; reading-order assembly (`ocrText.ts`, tested)
 - [x] Image capture (expo-image-picker) → OCR → editable note
 - [x] Voice capture (expo-audio, 16 kHz mono) → Whisper tiny EN via `SttContext`; waveform assembly tested
-- [ ] 📵 **Pending physical-device verification** — OCR/STT crash with `SIGILL` on the emulator
+- [x] **Verified on the OnePlus 15** (2026-06-13) — OCR + STT run on real hardware; the emulator `SIGILL` was emulator-only
 
-### Phase 2 — On-device LLM (answers + enrich) 📵
+### Phase 2 — On-device LLM (answers + enrich) ✅
 - [x] Llama 3.2 1B (SpinQuant) via `LlmContext`; RAG prompt (`prompt.ts`, tested)
 - [x] Ask → grounded answer from local search hits (on-device RAG)
 - [x] Opt-in auto-enrich: one-line summary + topic tags on new captures (`enrich.ts`, lenient parser tested)
-- [ ] 📵 **Pending physical-device verification** — LLM inference crashes with `SIGILL` on the emulator
+- [x] **Verified on the OnePlus 15** (2026-06-13) — LLM answers + enrich run on real hardware (no `SIGILL`)
 
 ### Phase 3 — Companion sync + polish 🟦
 - [x] On-device-first landing — an unpaired phone lands on the on-device home, not the pair screen
@@ -63,12 +63,11 @@ A self-sufficient pipeline that runs entirely on the phone, using a single toolk
 
 ## Current status
 
-The **companion layer is complete**. The **on-device brain is built through Phase 2** —
+The **companion layer is complete**. The **on-device brain is built and verified through Phase 2** —
 capture (note/share/image/voice), embeddings, semantic search, grounded LLM answers, and
-opt-in enrichment are all implemented and bundle. **Embeddings + search are verified on real
-hardware; OCR, STT, and the LLM are pending verification on a physical device** (they
-`SIGILL` on the Apple-Silicon emulator). Phase 3 (two-way memory sync) is the next build.
+opt-in enrichment all run **on real hardware**: verified on the **OnePlus 15** (model `CPH2745`,
+Android 16/API 36, `arm64-v8a`) on 2026-06-13, with no `SIGILL` (the crash was emulator-only — the
+Apple-Silicon AVD falsely advertises SVE). Phase 3 (two-way memory sync) is the next build.
 
-**Owner / device follow-ups:** verify OCR/STT/LLM on the target phone (the definition of done
-for Phases 1–2); produce a signed release build (real keystore — see [`BUILD.md`](./BUILD.md));
-then Phase 3 sync.
+**Owner / device follow-ups:** produce a signed release build (real keystore + R8 — see
+[`BUILD.md`](./BUILD.md)); then Phase 3 sync.

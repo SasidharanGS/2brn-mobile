@@ -75,7 +75,8 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
 - ✅ Builds + runs on the `Pixel_8` emulator; the OCR integration is **stable at rest** (lazy-loaded, so
   Phase 0 embeddings/search are untouched and the app doesn't crash on launch); the **"From image"**
   button and the share-image thumbnail/OCR-status UI render on-device.
-- ⏳ **OCR extraction itself is pending real-device (OnePlus 15) verification** — see the caveat below.
+- ✅ **OCR extraction verified on the OnePlus 15** (2026-06-13) — real recognition ran on `arm64-v8a`
+  hardware with no `SIGILL`; see the emulator caveat below for why it couldn't be checked on the AVD.
 
 > **Emulator caveat (Apple Silicon) — why OCR can't be verified on the `Pixel_8` emulator.** Calling the
 > executorch OCR `forward()` crashes the app with **`SIGILL` (illegal instruction)** in the recognizer
@@ -85,8 +86,9 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
 > executes an instruction the host CPU lacks → illegal opcode. Phase 0 embeddings are **FP32/NEON**, so
 > they're unaffected — which is exactly why search works but OCR doesn't. The OCR models download fine
 > (`detector-craft`, `recognizer-crnn.en` `.pte` cached on-device); only inference faults. A **real
-> ARMv9 phone (the OnePlus 15) does not lie about SVE**, so OCR is expected to run there. _Verify on the
-> OnePlus 15 before treating Branch A as fully done._
+> ARMv9 phone (the OnePlus 15) does not lie about SVE**, so OCR runs there. _Verified on the OnePlus 15
+> (model `CPH2745`, Android 16/API 36) on 2026-06-13 — OCR ran with no `SIGILL`, confirming the fault was
+> emulator-only. This caveat is kept as historical context for anyone reviewing on an Apple-Silicon AVD._
 
 ### Branch B — `feat/voice-capture`
 
@@ -114,9 +116,9 @@ branch's stated check is green (`typecheck` + `lint` + `test`, and an on-device 
 - ✅ Builds + runs on the emulator; Record/Stop, mic permission, and the PCM capture pipeline work. The
   **silence guard** means a silent emulator mic safely records → stops → no-ops without transcribing (so
   no crash on the emulator).
-- ⏳ **Transcription pending OnePlus 15** — Whisper inference uses the same instruction path as OCR, so
-  it hits the same Apple-Silicon emulator SVE `SIGILL` (see the Branch A caveat above). Verify real
-  speech → text on the device.
+- ✅ **Transcription verified on the OnePlus 15** (2026-06-13) — the Whisper tiny.en model loads and
+  transcribes on real hardware. The Apple-Silicon emulator SVE `SIGILL` (see the Branch A caveat above)
+  was emulator-only.
 
 ---
 
