@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Text, TextInput, View } from 'react-native'
 
+import { useTheme } from '@/theme/ThemeContext'
 import { prettyTime } from '@/utils/date'
 import { Markdown } from './Markdown'
 import { EmptyState, ErrorState, Loading } from './states'
@@ -25,6 +26,7 @@ interface Props {
 /** Shared view for a date-scoped markdown document (journal / blog): renders the
  *  content with Edit + Regenerate, an empty/generate state, and loading/errors. */
 export function MarkdownDocView(props: Props) {
+  const { skin } = useTheme()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
 
@@ -53,6 +55,7 @@ export function MarkdownDocView(props: Props) {
           onChangeText={setDraft}
           textAlignVertical="top"
           className="min-h-[320px] rounded-xl border border-border bg-surface p-3 text-base text-fg"
+          style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
         />
         <View className="mt-3 flex-row gap-3">
           <View className="flex-1">
