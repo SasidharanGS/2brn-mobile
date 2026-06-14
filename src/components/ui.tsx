@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, Text, type TextStyle, View } from 'react-
 
 import { categoryChip, type ChipColors, stateChip } from '@/theme/colors'
 import { useTheme } from '@/theme/ThemeContext'
+import { inkColor, stateInk } from '@/theme/tokens'
 
 /**
  * Per-skin text treatment. Modern keeps its Tailwind weight classes; minimal
@@ -130,12 +131,44 @@ export function Chip({ label, colors }: { label: string; colors: ChipColors }) {
 }
 
 export function CategoryChip({ category }: { category?: string | null }) {
+  const { skin, tokens } = useTheme()
   if (!category) return null
+  // Minimal: category is neutral (no hue) — a quiet pill in the rule tint.
+  if (skin === 'minimal') {
+    return (
+      <View
+        style={{ backgroundColor: tokens.colors.rule, borderRadius: tokens.radiusPill }}
+        className="self-start px-2 py-0.5"
+      >
+        <Text
+          style={{ color: tokens.colors.muted, fontFamily: tokens.fontSans, textTransform: 'lowercase' }}
+          className="text-xs"
+        >
+          {category}
+        </Text>
+      </View>
+    )
+  }
   return <Chip label={category} colors={categoryChip(category)} />
 }
 
 export function StateChip({ state }: { state?: string | null }) {
+  const { skin, tokens } = useTheme()
   if (!state) return null
+  // Minimal: state encoded by intensity — an ink-ramp square + label, never hue.
+  if (skin === 'minimal') {
+    return (
+      <View className="flex-row items-center self-start" style={{ gap: 6 }}>
+        <View style={{ width: 7, height: 7, backgroundColor: inkColor(tokens, stateInk(state)) }} />
+        <Text
+          style={{ color: tokens.colors.muted, fontFamily: tokens.fontSans, textTransform: 'lowercase' }}
+          className="text-xs"
+        >
+          {state}
+        </Text>
+      </View>
+    )
+  }
   return <Chip label={state} colors={stateChip(state)} />
 }
 

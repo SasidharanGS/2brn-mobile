@@ -121,6 +121,32 @@ export const THEME: Record<Skin, Record<ResolvedMode, ThemeTokens>> = {
   },
 }
 
+/**
+ * Productivity state → intensity-ramp level (0–4). The minimal skin encodes state
+ * by magnitude on the monochrome `--ink` ramp, never by hue (mirrors the desktop
+ * minimal skin). idle → empty, deep work/focused → peak.
+ */
+export const STATE_INK: Record<string, number> = {
+  deep_work: 4,
+  focused: 4,
+  productive: 3,
+  'in-meeting': 2,
+  communication: 2,
+  chilling: 1,
+  distracted: 1,
+  procrastinating: 1,
+  idle: 0,
+}
+
+export function stateInk(state: string | null | undefined): number {
+  return STATE_INK[state ?? ''] ?? 0
+}
+
+/** The ink-ramp hex for a level, clamped to 0–4. */
+export function inkColor(tokens: ThemeTokens, level: number): string {
+  return tokens.colors.ink[Math.max(0, Math.min(4, level))]
+}
+
 /** Resolve a (possibly `system`) mode to a concrete light/dark using the OS scheme. */
 export function resolveMode(mode: ThemeMode, systemScheme: ResolvedMode): ResolvedMode {
   return mode === 'system' ? systemScheme : mode
