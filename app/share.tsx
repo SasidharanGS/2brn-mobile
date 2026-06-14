@@ -27,7 +27,7 @@ export default function ShareScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const qc = useQueryClient()
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const { state } = useConnection()
   const { extractText, downloadProgress } = useOcr()
   const saveMemory = useSaveMemory()
@@ -187,6 +187,7 @@ export default function ShareScreen() {
               placeholder="A short title"
               placeholderTextColor={tokens.colors.muted}
               className="mb-3 rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Note
@@ -199,6 +200,7 @@ export default function ShareScreen() {
               multiline
               textAlignVertical="top"
               className="mb-3 min-h-[120px] rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Source URL (optional)
@@ -211,6 +213,7 @@ export default function ShareScreen() {
               placeholder="https://…"
               placeholderTextColor={tokens.colors.muted}
               className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             {save.isError ? (
               <Text className="mb-3 text-sm text-red-500">

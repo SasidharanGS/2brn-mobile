@@ -20,7 +20,7 @@ export default function InstructionsScreen() {
   const api = useApi()
   const qc = useQueryClient()
   const q = useInstructions()
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const [editing, setEditing] = useState<Editing>(null)
 
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.instructions })
@@ -101,6 +101,7 @@ export default function InstructionsScreen() {
               placeholder="Title"
               placeholderTextColor={tokens.colors.muted}
               className="mb-2 rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <TextInput
               value={editing.body}
@@ -110,6 +111,7 @@ export default function InstructionsScreen() {
               multiline
               textAlignVertical="top"
               className="mb-3 min-h-[90px] rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <View className="flex-row gap-3">
               <View className="flex-1">

@@ -20,7 +20,7 @@ export function CaptureCard({ onSaved, onReload }: { onSaved: () => void; onRelo
   const { extractText } = useOcr()
   const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
   const saveMemory = useSaveMemory()
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
 
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
@@ -105,6 +105,7 @@ export function CaptureCard({ onSaved, onReload }: { onSaved: () => void; onRelo
         multiline
         textAlignVertical="top"
         className="mb-3 min-h-[64px] rounded-lg border border-border px-3 py-2 text-fg"
+        style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
       />
       <Button
         label="Add to memory"

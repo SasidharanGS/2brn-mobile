@@ -14,7 +14,7 @@ export default function PairScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { pair } = useConnection()
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const [permission, requestPermission] = useCameraPermissions()
   const [mode, setMode] = useState<'scan' | 'manual'>('scan')
   const [busy, setBusy] = useState(false)
@@ -129,6 +129,7 @@ export default function PairScreen() {
               placeholder="http://192.168.1.23:7842"
               placeholderTextColor={tokens.colors.muted}
               className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Pairing token
@@ -142,6 +143,7 @@ export default function PairScreen() {
               placeholder="Paste the token from the desktop"
               placeholderTextColor={tokens.colors.muted}
               className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
+              style={skin === 'minimal' ? { borderRadius: 0 } : undefined}
             />
             <Button label="Connect" onPress={onManualSubmit} loading={busy} />
           </Card>
