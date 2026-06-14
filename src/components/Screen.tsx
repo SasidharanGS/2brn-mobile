@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { RefreshControl, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 interface ScreenProps {
   children: ReactNode
@@ -14,10 +14,12 @@ interface ScreenProps {
   topInset?: boolean
 }
 
-const BG = 'flex-1 bg-slate-50 dark:bg-slate-950'
+const BG = 'flex-1 bg-bg'
 
 export function Screen({ children, scroll = false, refreshing, onRefresh, topInset = true }: ScreenProps) {
   const insets = useSafeAreaInsets()
+  const { tokens } = useTheme()
+  const accent = tokens.colors.accent
   const top = topInset ? insets.top : 0
 
   if (scroll) {
@@ -28,7 +30,7 @@ export function Screen({ children, scroll = false, refreshing, onRefresh, topIns
         contentContainerStyle={{ paddingTop: top + 8, paddingBottom: insets.bottom + 32, paddingHorizontal: 16 }}
         refreshControl={
           onRefresh ? (
-            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={PRIMARY} colors={[PRIMARY]} />
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={accent} colors={[accent]} />
           ) : undefined
         }
       >

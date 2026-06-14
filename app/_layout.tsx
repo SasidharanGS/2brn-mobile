@@ -1,6 +1,7 @@
 import '../global.css'
 
 import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
 import { Stack, usePathname, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent'
@@ -15,6 +16,7 @@ import { EmbeddingsProvider } from '@/ml/EmbeddingsContext'
 import { LlmProvider } from '@/ml/LlmContext'
 import { OcrProvider } from '@/ml/OcrContext'
 import { SttProvider } from '@/ml/SttContext'
+import { ThemeProvider } from '@/theme/ThemeContext'
 
 // Wire ExecuTorch's on-device model runtime to Expo's file system. Done from the
 // root layout's mount effect (not as an import-time side effect) so importing this
@@ -43,35 +45,45 @@ function ShareIntentGate() {
 }
 
 export default function RootLayout() {
+  // Inter (variable) powers the minimal skin; modern uses the system font. We
+  // proceed on load error too — Inter just falls back to the system font.
+  const [fontsLoaded, fontError] = useFonts({
+    Inter: require('../assets/fonts/Inter-Variable.ttf'),
+  })
+
   useEffect(() => {
     wireExecutorch()
   }, [])
 
+  if (!fontsLoaded && !fontError) return null
+
   return (
     <ShareIntentProvider options={{ resetOnBackground: true, debug: false }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ConnectionProvider>
-            <EmbeddingsProvider>
-              <OcrProvider>
-                <SttProvider>
-                  <LlmProvider>
-                    <StatusBar style="auto" />
-                    <ShareIntentGate />
-                    <Stack
-                      screenOptions={{
-                        headerShown: false,
-                        contentStyle: { backgroundColor: 'transparent' },
-                      }}
-                    >
-                      <Stack.Screen name="share" options={{ presentation: 'modal' }} />
-                    </Stack>
-                  </LlmProvider>
-                </SttProvider>
-              </OcrProvider>
-            </EmbeddingsProvider>
-          </ConnectionProvider>
-        </QueryClientProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <ConnectionProvider>
+              <EmbeddingsProvider>
+                <OcrProvider>
+                  <SttProvider>
+                    <LlmProvider>
+                      <StatusBar style="auto" />
+                      <ShareIntentGate />
+                      <Stack
+                        screenOptions={{
+                          headerShown: false,
+                          contentStyle: { backgroundColor: 'transparent' },
+                        }}
+                      >
+                        <Stack.Screen name="share" options={{ presentation: 'modal' }} />
+                      </Stack>
+                    </LlmProvider>
+                  </SttProvider>
+                </OcrProvider>
+              </EmbeddingsProvider>
+            </ConnectionProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </ShareIntentProvider>
   )

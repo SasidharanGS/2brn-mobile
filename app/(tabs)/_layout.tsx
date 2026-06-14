@@ -1,15 +1,14 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Redirect, Tabs } from 'expo-router'
-import { useColorScheme } from 'react-native'
 
 import { Screen } from '@/components/Screen'
 import { Loading } from '@/components/states'
 import { useConnection } from '@/connection/ConnectionContext'
-import { MUTED, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 export default function TabsLayout() {
   const { state } = useConnection()
-  const dark = useColorScheme() === 'dark'
+  const { tokens } = useTheme()
 
   if (state.status === 'loading') {
     return (
@@ -28,11 +27,11 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: PRIMARY,
-        tabBarInactiveTintColor: dark ? '#64748b' : MUTED,
+        tabBarActiveTintColor: tokens.colors.accent,
+        tabBarInactiveTintColor: tokens.colors.muted,
         tabBarStyle: {
-          backgroundColor: dark ? '#0b1220' : '#ffffff',
-          borderTopColor: dark ? '#1e293b' : '#e2e8f0',
+          backgroundColor: tokens.colors.surface,
+          borderTopColor: tokens.colors.rule,
         },
       }}
     >

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Constants from 'expo-constants'
 import { useRouter } from 'expo-router'
-import { Alert, Linking, Switch, Text, View } from 'react-native'
+import { Alert, Linking, Pressable, Switch, Text, View } from 'react-native'
 
 import { queryKeys } from '@/api/queryKeys'
 import { Header } from '@/components/Header'
@@ -10,17 +10,61 @@ import { Screen } from '@/components/Screen'
 import { Button, Card, SectionTitle } from '@/components/ui'
 import { useApi, useConnection } from '@/connection/ConnectionContext'
 import { useSettings } from '@/hooks/queries'
+import { useTheme } from '@/theme/ThemeContext'
+import { SKINS, THEME_MODES } from '@/theme/tokens'
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-center justify-between py-1.5">
-      <Text className="text-sm text-slate-500 dark:text-slate-400">{label}</Text>
-      <Text
-        className="ml-3 flex-1 text-right text-sm text-slate-900 dark:text-slate-100"
-        numberOfLines={1}
-      >
+      <Text className="text-sm text-muted">{label}</Text>
+      <Text className="ml-3 flex-1 text-right text-sm text-fg" numberOfLines={1}>
         {value}
       </Text>
+    </View>
+  )
+}
+
+/** Inline segmented control used for the appearance choices. */
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T
+  options: readonly T[]
+  onChange: (v: T) => void
+}) {
+  const { skin, tokens } = useTheme()
+  return (
+    <View
+      className="flex-row self-start overflow-hidden border border-border"
+      style={{ borderRadius: skin === 'minimal' ? tokens.radiusPill : 10 }}
+    >
+      {options.map((opt, i) => {
+        const active = opt === value
+        const activeText = skin === 'minimal' ? tokens.colors.bg : '#ffffff'
+        return (
+          <Pressable
+            key={opt}
+            onPress={() => onChange(opt)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            className="px-3.5 py-1.5"
+            style={{
+              backgroundColor: active ? tokens.colors.accent : 'transparent',
+              borderLeftWidth: i === 0 ? 0 : 1,
+              borderLeftColor: tokens.colors.border,
+            }}
+          >
+            <Text
+              className="text-xs font-semibold capitalize"
+              style={{ color: active ? activeText : tokens.colors.fg }}
+            >
+              {opt}
+            </Text>
+          </Pressable>
+        )
+      })}
     </View>
   )
 }
@@ -31,6 +75,7 @@ export default function SettingsScreen() {
   const qc = useQueryClient()
   const { state, unpair } = useConnection()
   const settings = useSettings()
+  const { skin, mode, setSkin, setMode } = useTheme()
 
   const setPaused = useMutation({
     mutationFn: (paused: boolean) => api.setPaused(paused),
@@ -54,7 +99,7 @@ export default function SettingsScreen() {
     ])
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header title="Settings" />
       <Screen
         scroll
@@ -62,6 +107,18 @@ export default function SettingsScreen() {
         refreshing={settings.isRefetching}
         onRefresh={() => void settings.refetch()}
       >
+        <SectionTitle>Appearance</SectionTitle>
+        <Card className="mb-4">
+          <View className="flex-row items-center justify-between py-1.5">
+            <Text className="text-sm text-fg">Theme</Text>
+            <Segmented value={skin} options={SKINS} onChange={setSkin} />
+          </View>
+          <View className="flex-row items-center justify-between py-1.5">
+            <Text className="text-sm text-fg">Mode</Text>
+            <Segmented value={mode} options={THEME_MODES} onChange={setMode} />
+          </View>
+        </Card>
+
         <SectionTitle>Connection</SectionTitle>
         <Card className="mb-4">
           <Row label="Desktop" value={state.status === 'paired' ? state.baseUrl : '—'} />
@@ -83,10 +140,8 @@ export default function SettingsScreen() {
               <Card className="mb-4">
                 <View className="flex-row items-center justify-between py-1">
                   <View className="flex-1 pr-3">
-                    <Text className="text-sm text-slate-900 dark:text-slate-100">
-                      Pause capture
-                    </Text>
-                    <Text className="text-xs text-slate-500 dark:text-slate-400">
+                    <Text className="text-sm text-fg">Pause capture</Text>
+                    <Text className="text-xs text-muted">
                       Stops the desktop from taking new screenshots.
                     </Text>
                   </View>
@@ -105,7 +160,7 @@ export default function SettingsScreen() {
                 <Row label="Chat model" value={data.chat_provider.model || '—'} />
                 <Row label="Chat endpoint" value={data.chat_provider.base_url || '—'} />
                 <Row label="Embed model" value={data.embed_provider.model || '—'} />
-                <Text className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                <Text className="mt-2 text-xs text-muted">
                   Provider URLs and API keys are managed on the desktop app to keep secrets off your
                   phone.
                 </Text>
@@ -117,7 +172,7 @@ export default function SettingsScreen() {
         <SectionTitle>About</SectionTitle>
         <Card>
           <Row label="App version" value={Constants.expoConfig?.version ?? '0.1.0'} />
-          <Text className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+          <Text className="mt-2 text-sm text-muted">
             2brn keeps your captures on your phone — embedded, searchable, and answered on-device. A
             desktop is optional; when paired it syncs over your local network, and nothing leaves
             it.
@@ -135,7 +190,7 @@ export default function SettingsScreen() {
           <>
             <SectionTitle>Developer</SectionTitle>
             <Card>
-              <Text className="mb-2 text-sm text-slate-600 dark:text-slate-300">
+              <Text className="mb-2 text-sm text-muted">
                 Verify the on-device models run on this device.
               </Text>
               <Button
