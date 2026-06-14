@@ -11,7 +11,8 @@ import { EmptyState } from '@/components/states'
 import { Button, Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useInstructions } from '@/hooks/queries'
-import { DANGER, MUTED, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
+import { DANGER } from '@/theme/colors'
 
 type Editing = { id: number | 'new'; title: string; body: string } | null
 
@@ -19,6 +20,7 @@ export default function InstructionsScreen() {
   const api = useApi()
   const qc = useQueryClient()
   const q = useInstructions()
+  const { tokens } = useTheme()
   const [editing, setEditing] = useState<Editing>(null)
 
   const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.instructions })
@@ -72,7 +74,7 @@ export default function InstructionsScreen() {
     ])
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header
         title="Instructions"
         right={
@@ -81,7 +83,7 @@ export default function InstructionsScreen() {
             onPress={() => setEditing({ id: 'new', title: '', body: '' })}
             className="h-10 w-10 items-center justify-center"
           >
-            <Ionicons name="add" size={26} color={PRIMARY} />
+            <Ionicons name="add" size={26} color={tokens.colors.accent} />
           </Pressable>
         }
       />
@@ -97,17 +99,17 @@ export default function InstructionsScreen() {
               value={editing.title}
               onChangeText={(t) => setEditing({ ...editing, title: t })}
               placeholder="Title"
-              placeholderTextColor={MUTED}
-              className="mb-2 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              placeholderTextColor={tokens.colors.muted}
+              className="mb-2 rounded-lg border border-border px-3 py-2 text-fg"
             />
             <TextInput
               value={editing.body}
               onChangeText={(t) => setEditing({ ...editing, body: t })}
               placeholder="e.g. Keep journal entries concise and first-person."
-              placeholderTextColor={MUTED}
+              placeholderTextColor={tokens.colors.muted}
               multiline
               textAlignVertical="top"
-              className="mb-3 min-h-[90px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              className="mb-3 min-h-[90px] rounded-lg border border-border px-3 py-2 text-fg"
             />
             <View className="flex-row gap-3">
               <View className="flex-1">
@@ -135,22 +137,20 @@ export default function InstructionsScreen() {
             items.map((it) => (
               <Card key={it.id} className="mb-2">
                 <View className="flex-row items-start justify-between">
-                  <Text className="flex-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-                    {it.title}
-                  </Text>
+                  <Text className="flex-1 text-base font-semibold text-fg">{it.title}</Text>
                   <Switch
                     value={it.enabled}
                     onValueChange={(enabled) => toggle.mutate({ id: it.id, enabled })}
                   />
                 </View>
-                <Text className="mt-1 text-sm text-slate-600 dark:text-slate-300">{it.body}</Text>
+                <Text className="mt-1 text-sm text-muted">{it.body}</Text>
                 <View className="mt-3 flex-row justify-end gap-1">
                   <Pressable
                     accessibilityLabel="Edit"
                     onPress={() => setEditing({ id: it.id, title: it.title, body: it.body })}
                     className="h-9 w-9 items-center justify-center"
                   >
-                    <Ionicons name="pencil-outline" size={18} color={PRIMARY} />
+                    <Ionicons name="pencil-outline" size={18} color={tokens.colors.accent} />
                   </Pressable>
                   <Pressable
                     accessibilityLabel="Delete"

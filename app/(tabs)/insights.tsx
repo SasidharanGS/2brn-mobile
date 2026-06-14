@@ -7,12 +7,13 @@ import { Screen } from '@/components/Screen'
 import { SegmentedControl } from '@/components/SegmentedControl'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat, StateChip } from '@/components/ui'
 import { useInsightsSummary } from '@/hooks/queries'
-import { categoryChip, PRIMARY, stateChip } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
+import { categoryChip, stateChip } from '@/theme/colors'
 import { fmtDur, todayISODate } from '@/utils/date'
 
 function Meter({ pct, color }: { pct: number; color: string }) {
   return (
-    <View className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+    <View className="h-2 overflow-hidden rounded-full bg-surface-2">
       <View
         style={{ width: `${Math.min(Math.max(pct, 0), 100)}%`, backgroundColor: color }}
         className="h-2 rounded-full"
@@ -25,6 +26,7 @@ export default function InsightsScreen() {
   const [period, setPeriod] = useState<InsightsPeriod>('day')
   const date = todayISODate()
   const q = useInsightsSummary(date, period)
+  const { tokens } = useTheme()
 
   return (
     <Screen scroll refreshing={q.isRefetching} onRefresh={() => void q.refetch()}>
@@ -66,7 +68,7 @@ export default function InsightsScreen() {
                     <View key={c.task_category} className="mb-3">
                       <View className="mb-1 flex-row items-center justify-between">
                         <CategoryChip category={c.task_category} />
-                        <Text className="text-xs text-slate-500 dark:text-slate-400">{c.pct}%</Text>
+                        <Text className="text-xs text-muted">{c.pct}%</Text>
                       </View>
                       <Meter pct={c.pct} color={categoryChip(c.task_category).dot} />
                     </View>
@@ -83,7 +85,7 @@ export default function InsightsScreen() {
                     <View key={s.productivity_state} className="mb-3">
                       <View className="mb-1 flex-row items-center justify-between">
                         <StateChip state={s.productivity_state} />
-                        <Text className="text-xs text-slate-500 dark:text-slate-400">{s.pct}%</Text>
+                        <Text className="text-xs text-muted">{s.pct}%</Text>
                       </View>
                       <Meter pct={s.pct} color={stateChip(s.productivity_state).dot} />
                     </View>
@@ -99,12 +101,10 @@ export default function InsightsScreen() {
                   {data.top_apps.map((a) => (
                     <View key={a.app_name} className="mb-3">
                       <View className="mb-1 flex-row items-center justify-between">
-                        <Text className="text-sm text-slate-700 dark:text-slate-200">
-                          {a.app_name}
-                        </Text>
-                        <Text className="text-xs text-slate-500 dark:text-slate-400">{a.pct}%</Text>
+                        <Text className="text-sm text-fg">{a.app_name}</Text>
+                        <Text className="text-xs text-muted">{a.pct}%</Text>
                       </View>
-                      <Meter pct={a.pct} color={PRIMARY} />
+                      <Meter pct={a.pct} color={tokens.colors.accent} />
                     </View>
                   ))}
                 </Card>
@@ -118,14 +118,10 @@ export default function InsightsScreen() {
                   {data.recurring_activities.map((r, i) => (
                     <View
                       key={r.canonical_summary}
-                      className={
-                        i > 0 ? 'mt-3 border-t border-slate-100 pt-3 dark:border-slate-800' : ''
-                      }
+                      className={i > 0 ? 'mt-3 border-t border-rule pt-3' : ''}
                     >
-                      <Text className="text-sm text-slate-800 dark:text-slate-100">
-                        {r.canonical_summary}
-                      </Text>
-                      <Text className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                      <Text className="text-sm text-fg">{r.canonical_summary}</Text>
+                      <Text className="mt-0.5 text-xs text-muted">
                         ≈{fmtDur(r.approx_seconds)} · {r.occurrences} occurrences
                       </Text>
                     </View>

@@ -19,7 +19,7 @@ export default function TimelineScreen() {
   )
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header title="Timeline" />
       <Screen
         scroll
@@ -43,13 +43,9 @@ export default function TimelineScreen() {
             activities.map((a) => (
               <Card key={a.id} className="mb-2">
                 <View className="mb-1 flex-row items-center justify-between">
-                  <Text className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    {prettyTime(a.started_at)}
-                  </Text>
+                  <Text className="text-xs font-medium text-muted">{prettyTime(a.started_at)}</Text>
                 </View>
-                <Text className="text-sm text-slate-800 dark:text-slate-100">
-                  {a.summary ?? 'No summary'}
-                </Text>
+                <Text className="text-sm text-fg">{a.summary ?? 'No summary'}</Text>
                 <View className="mt-2 flex-row flex-wrap gap-2">
                   <CategoryChip category={a.task_category} />
                   <StateChip state={a.productivity_state} />

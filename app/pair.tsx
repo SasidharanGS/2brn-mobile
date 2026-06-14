@@ -8,12 +8,13 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Button, Card, ScreenTitle } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { buildPairingUrl, parsePairingPayload, type PairingPayload } from '@/connection/pairing'
-import { MUTED } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 export default function PairScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const { pair } = useConnection()
+  const { tokens } = useTheme()
   const [permission, requestPermission] = useCameraPermissions()
   const [mode, setMode] = useState<'scan' | 'manual'>('scan')
   const [busy, setBusy] = useState(false)
@@ -64,7 +65,7 @@ export default function PairScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-slate-50 dark:bg-slate-950"
+      className="flex-1 bg-bg"
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -94,10 +95,10 @@ export default function PairScreen() {
           <Card className="overflow-hidden p-0">
             <View className="aspect-square w-full items-center justify-center bg-black">
               {!permission ? (
-                <Text className="text-slate-300">Checking camera…</Text>
+                <Text className="text-white">Checking camera…</Text>
               ) : !permission.granted ? (
                 <View className="items-center px-6">
-                  <Text className="mb-4 text-center text-slate-300">
+                  <Text className="mb-4 text-center text-white">
                     2brn needs camera access to scan the pairing QR code.
                   </Text>
                   <View className="w-48">
@@ -116,7 +117,7 @@ export default function PairScreen() {
           </Card>
         ) : (
           <Card>
-            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Desktop URL
             </Text>
             <TextInput
@@ -126,10 +127,10 @@ export default function PairScreen() {
               autoCorrect={false}
               keyboardType="url"
               placeholder="http://192.168.1.23:7842"
-              placeholderTextColor={MUTED}
-              className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              placeholderTextColor={tokens.colors.muted}
+              className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
             />
-            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Pairing token
             </Text>
             <TextInput
@@ -139,17 +140,15 @@ export default function PairScreen() {
               autoCorrect={false}
               secureTextEntry
               placeholder="Paste the token from the desktop"
-              placeholderTextColor={MUTED}
-              className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              placeholderTextColor={tokens.colors.muted}
+              className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
             />
             <Button label="Connect" onPress={onManualSubmit} loading={busy} />
           </Card>
         )}
 
         {busy && mode === 'scan' ? (
-          <Text className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
-            Connecting…
-          </Text>
+          <Text className="mt-4 text-center text-sm text-muted">Connecting…</Text>
         ) : null}
         {error ? <Text className="mt-4 text-center text-sm text-red-500">{error}</Text> : null}
 

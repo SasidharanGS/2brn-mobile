@@ -13,7 +13,7 @@ export default function BlogScreen() {
   const { refreshing, onRefresh, docViewProps } = useMarkdownDoc('blog', date)
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header title="Blog" />
       <Screen scroll topInset={false} refreshing={refreshing} onRefresh={onRefresh}>
         <DateBar date={date} onChange={setDate} />

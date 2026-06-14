@@ -11,7 +11,8 @@ import { EmptyState } from '@/components/states'
 import { Card } from '@/components/ui'
 import { useApi } from '@/connection/ConnectionContext'
 import { useSharedNotes } from '@/hooks/queries'
-import { DANGER, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
+import { DANGER } from '@/theme/colors'
 import { prettyTime } from '@/utils/date'
 import { isHttpUrl, openExternalUrl } from '@/utils/url'
 
@@ -20,6 +21,7 @@ export default function SavedScreen() {
   const qc = useQueryClient()
   const router = useRouter()
   const q = useSharedNotes()
+  const { tokens } = useTheme()
   const del = useMutation({
     mutationFn: (id: number) => api.deleteSharedNote(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.sharedNotes }),
@@ -32,7 +34,7 @@ export default function SavedScreen() {
     ])
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header
         title="Saved"
         right={
@@ -41,7 +43,7 @@ export default function SavedScreen() {
             onPress={() => router.push('/share')}
             className="h-10 w-10 items-center justify-center"
           >
-            <Ionicons name="add" size={26} color={PRIMARY} />
+            <Ionicons name="add" size={26} color={tokens.colors.accent} />
           </Pressable>
         }
       />
@@ -66,11 +68,9 @@ export default function SavedScreen() {
             notes.map((n) => (
               <Card key={n.id} className="mb-2">
                 {n.title ? (
-                  <Text className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-100">
-                    {n.title}
-                  </Text>
+                  <Text className="mb-1 text-base font-semibold text-fg">{n.title}</Text>
                 ) : null}
-                <Text numberOfLines={4} className="text-sm text-slate-700 dark:text-slate-300">
+                <Text numberOfLines={4} className="text-sm text-fg">
                   {n.text}
                 </Text>
                 {n.source_url ? (
@@ -84,16 +84,13 @@ export default function SavedScreen() {
                       {n.source_url}
                     </Text>
                   ) : (
-                    <Text
-                      numberOfLines={1}
-                      className="mt-1 text-xs text-slate-400 dark:text-slate-500"
-                    >
+                    <Text numberOfLines={1} className="mt-1 text-xs text-muted">
                       {n.source_url}
                     </Text>
                   )
                 ) : null}
                 <View className="mt-2 flex-row items-center justify-between">
-                  <Text className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <Text className="text-[11px] text-muted">
                     {prettyTime(n.created_at)} · {n.embedded ? 'searchable' : 'pending'}
                   </Text>
                   <Pressable

@@ -20,12 +20,14 @@ import { Button, Card } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { useOcr } from '@/ml/OcrContext'
 import { useSaveMemory } from '@/ml/useSaveMemory'
-import { MUTED, SUCCESS } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
+import { SUCCESS } from '@/theme/colors'
 
 export default function ShareScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const qc = useQueryClient()
+  const { tokens } = useTheme()
   const { state } = useConnection()
   const { extractText, downloadProgress } = useOcr()
   const saveMemory = useSaveMemory()
@@ -120,19 +122,19 @@ export default function ShareScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-slate-50 dark:bg-slate-950"
+      className="flex-1 bg-bg"
     >
       <View
         style={{ paddingTop: insets.top + 8 }}
         className="flex-row items-center justify-between px-4 pb-2"
       >
-        <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">Save to 2brn</Text>
+        <Text className="text-xl font-bold text-fg">Save to 2brn</Text>
         <Pressable
           accessibilityLabel="Close"
           onPress={close}
           className="h-9 w-9 items-center justify-center"
         >
-          <Ionicons name="close" size={24} color={MUTED} />
+          <Ionicons name="close" size={24} color={tokens.colors.muted} />
         </Pressable>
       </View>
 
@@ -143,10 +145,10 @@ export default function ShareScreen() {
         {done ? (
           <View className="items-center py-12">
             <Ionicons name="checkmark-circle" size={56} color={SUCCESS} />
-            <Text className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-50">
+            <Text className="mt-3 text-lg font-semibold text-fg">
               Saved to your phone
             </Text>
-            <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
+            <Text className="mt-1 text-center text-sm text-muted">
               {client
                 ? "It's saved on-device and synced to your desktop."
                 : "It's saved on-device and searchable offline."}
@@ -165,7 +167,7 @@ export default function ShareScreen() {
                   resizeMode="cover"
                 />
                 {ocrBusy ? (
-                  <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
+                  <Text className="mt-2 text-center text-xs text-muted">
                     Reading text from image…
                     {downloadProgress < 1 ? ` ${Math.round(downloadProgress * 100)}%` : ''}
                   </Text>
@@ -176,29 +178,29 @@ export default function ShareScreen() {
                 ) : null}
               </View>
             ) : null}
-            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Title (optional)
             </Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder="A short title"
-              placeholderTextColor={MUTED}
-              className="mb-3 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              placeholderTextColor={tokens.colors.muted}
+              className="mb-3 rounded-lg border border-border px-3 py-2 text-fg"
             />
-            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Note
             </Text>
             <TextInput
               value={text}
               onChangeText={setText}
               placeholder="What do you want to remember?"
-              placeholderTextColor={MUTED}
+              placeholderTextColor={tokens.colors.muted}
               multiline
               textAlignVertical="top"
-              className="mb-3 min-h-[120px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              className="mb-3 min-h-[120px] rounded-lg border border-border px-3 py-2 text-fg"
             />
-            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <Text className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted">
               Source URL (optional)
             </Text>
             <TextInput
@@ -207,8 +209,8 @@ export default function ShareScreen() {
               autoCapitalize="none"
               keyboardType="url"
               placeholder="https://…"
-              placeholderTextColor={MUTED}
-              className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+              placeholderTextColor={tokens.colors.muted}
+              className="mb-4 rounded-lg border border-border px-3 py-2 text-fg"
             />
             {save.isError ? (
               <Text className="mb-3 text-sm text-red-500">
@@ -222,7 +224,7 @@ export default function ShareScreen() {
               onPress={() => save.mutate()}
             />
             {!client ? (
-              <Text className="mt-3 text-center text-xs text-slate-400 dark:text-slate-500">
+              <Text className="mt-3 text-center text-xs text-muted">
                 Saved on your phone. Connect a desktop later to sync.
               </Text>
             ) : null}

@@ -42,18 +42,18 @@ function CheckCard({
   return (
     <Card className="mb-3">
       <View className="flex-row items-center justify-between">
-        <Text className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</Text>
+        <Text className="text-base font-semibold text-fg">{title}</Text>
         <Text className="text-base">
           {ICON[result.status]}
-          {result.ms !== undefined ? <Text className="text-xs text-slate-400"> {result.ms}ms</Text> : null}
+          {result.ms !== undefined ? <Text className="text-xs text-muted"> {result.ms}ms</Text> : null}
         </Text>
       </View>
-      <Text className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{hint}</Text>
+      <Text className="mt-0.5 text-xs text-muted">{hint}</Text>
       {downloading ? (
-        <Text className="mt-1 text-xs text-slate-400">Downloading model… {Math.round((progress ?? 0) * 100)}%</Text>
+        <Text className="mt-1 text-xs text-muted">Downloading model… {Math.round((progress ?? 0) * 100)}%</Text>
       ) : null}
       {result.detail ? (
-        <Text className="mt-1 text-xs text-slate-600 dark:text-slate-300" numberOfLines={4}>
+        <Text className="mt-1 text-xs text-muted" numberOfLines={4}>
           {result.detail}
         </Text>
       ) : null}
@@ -127,10 +127,10 @@ export default function SmokeScreen() {
 
   if (!__DEV__) {
     return (
-      <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+      <View className="flex-1 bg-bg">
         <Header title="Model smoke test" />
         <View className="flex-1 items-center justify-center p-8">
-          <Text className="text-center text-slate-500 dark:text-slate-400">
+          <Text className="text-center text-muted">
             This diagnostic is available in development builds only.
           </Text>
         </View>
@@ -139,10 +139,10 @@ export default function SmokeScreen() {
   }
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-slate-950">
+    <View className="flex-1 bg-bg">
       <Header title="Model smoke test" />
       <Screen scroll topInset={false}>
-        <Text className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+        <Text className="mb-3 text-xs text-muted">
           Verifies the on-device models actually run on this device. Models crash on the emulator — run this on a
           physical phone. First runs download the models (embeddings ~90 MB, LLM ~1 GB).
         </Text>
@@ -157,7 +157,7 @@ export default function SmokeScreen() {
         </CheckCard>
 
         <CheckCard title="LLM" hint="Llama 3.2 1B — generates a grounded answer" result={llmRes} progress={llm.downloadProgress}>
-          <Text className="text-xs text-slate-400 dark:text-slate-500">Runs with the button above.</Text>
+          <Text className="text-xs text-muted">Runs with the button above.</Text>
         </CheckCard>
 
         <CheckCard title="OCR" hint="OCR_ENGLISH — reads text from an image" result={ocrRes} progress={ocr.downloadProgress}>
