@@ -8,15 +8,18 @@ import { SegmentedControl } from '@/components/SegmentedControl'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat, StateChip } from '@/components/ui'
 import { useInsightsSummary } from '@/hooks/queries'
 import { useTheme } from '@/theme/ThemeContext'
+import { inkColor, stateInk } from '@/theme/tokens'
 import { categoryChip, stateChip } from '@/theme/colors'
 import { fmtDur, todayISODate } from '@/utils/date'
 
 function Meter({ pct, color }: { pct: number; color: string }) {
+  const { skin } = useTheme()
+  const radius = skin === 'minimal' ? 0 : 9999 // square bars in minimal
   return (
-    <View className="h-2 overflow-hidden rounded-full bg-surface-2">
+    <View className="h-2 overflow-hidden bg-rule" style={{ borderRadius: radius }}>
       <View
-        style={{ width: `${Math.min(Math.max(pct, 0), 100)}%`, backgroundColor: color }}
-        className="h-2 rounded-full"
+        style={{ width: `${Math.min(Math.max(pct, 0), 100)}%`, backgroundColor: color, borderRadius: radius }}
+        className="h-2"
       />
     </View>
   )
@@ -26,7 +29,10 @@ export default function InsightsScreen() {
   const [period, setPeriod] = useState<InsightsPeriod>('day')
   const date = todayISODate()
   const q = useInsightsSummary(date, period)
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
+  // Minimal encodes by intensity, not hue: category bars use a single neutral ink,
+  // state bars use the state's ramp level; modern keeps the category/state colors.
+  const minimal = skin === 'minimal'
 
   return (
     <Screen scroll refreshing={q.isRefetching} onRefresh={() => void q.refetch()}>
@@ -70,7 +76,10 @@ export default function InsightsScreen() {
                         <CategoryChip category={c.task_category} />
                         <Text className="text-xs text-muted">{c.pct}%</Text>
                       </View>
-                      <Meter pct={c.pct} color={categoryChip(c.task_category).dot} />
+                      <Meter
+                        pct={c.pct}
+                        color={minimal ? inkColor(tokens, 3) : categoryChip(c.task_category).dot}
+                      />
                     </View>
                   ))}
                 </Card>
@@ -87,7 +96,14 @@ export default function InsightsScreen() {
                         <StateChip state={s.productivity_state} />
                         <Text className="text-xs text-muted">{s.pct}%</Text>
                       </View>
-                      <Meter pct={s.pct} color={stateChip(s.productivity_state).dot} />
+                      <Meter
+                        pct={s.pct}
+                        color={
+                          minimal
+                            ? inkColor(tokens, stateInk(s.productivity_state))
+                            : stateChip(s.productivity_state).dot
+                        }
+                      />
                     </View>
                   ))}
                 </Card>
@@ -104,7 +120,7 @@ export default function InsightsScreen() {
                         <Text className="text-sm text-fg">{a.app_name}</Text>
                         <Text className="text-xs text-muted">{a.pct}%</Text>
                       </View>
-                      <Meter pct={a.pct} color={tokens.colors.accent} />
+                      <Meter pct={a.pct} color={minimal ? inkColor(tokens, 3) : tokens.colors.accent} />
                     </View>
                   ))}
                 </Card>

@@ -7,13 +7,14 @@ import { useTheme } from '@/theme/ThemeContext'
 export function Markdown({ children }: { children: string }) {
   const { tokens } = useTheme()
   const c = tokens.colors
+  const font = tokens.fontSans // Inter for minimal, system (undefined) for modern
 
   const styles = useMemo(
     () => ({
-      body: { color: c.fg, fontSize: 15, lineHeight: 23 },
-      heading1: { color: c.fg, fontSize: 22, fontWeight: '700', marginTop: 8, marginBottom: 6 },
-      heading2: { color: c.fg, fontSize: 18, fontWeight: '700', marginTop: 8, marginBottom: 4 },
-      heading3: { color: c.fg, fontSize: 16, fontWeight: '600', marginTop: 6, marginBottom: 4 },
+      body: { color: c.fg, fontSize: 15, lineHeight: 23, fontFamily: font },
+      heading1: { color: c.fg, fontSize: 22, fontWeight: '700', marginTop: 8, marginBottom: 6, fontFamily: font },
+      heading2: { color: c.fg, fontSize: 18, fontWeight: '700', marginTop: 8, marginBottom: 4, fontFamily: font },
+      heading3: { color: c.fg, fontSize: 16, fontWeight: '600', marginTop: 6, marginBottom: 4, fontFamily: font },
       strong: { fontWeight: '700' },
       blockquote: {
         backgroundColor: c.surface2,
@@ -31,7 +32,7 @@ export function Markdown({ children }: { children: string }) {
       hr: { backgroundColor: c.border, height: 1 },
       list_item: { marginVertical: 2 },
     }),
-    [c],
+    [c, font],
   )
 
   return <MarkdownDisplay style={styles}>{children}</MarkdownDisplay>
