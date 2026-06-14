@@ -51,7 +51,18 @@
       ],
       "expo-sqlite",
       "expo-asset",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "# react-native-executorch ships no consumer ProGuard rules and is reached via\n# JNI/TurboModules + reflection, so R8 must keep BOTH its RN binding layer and the\n# executorch Java runtime API (org.pytorch.executorch.*, loaded reflectively from the\n# bundled AAR). Verified necessary: without the org.pytorch keep a release build crashes\n# at startup with ClassNotFoundException: org.pytorch.executorch.Module.\n-keep class com.swmansion.rnexecutorch.** { *; }\n-keep class org.pytorch.executorch.** { *; }\n-dontwarn org.pytorch.executorch.**"
+          }
+        }
+      ],
+      "./plugins/withReleaseSigning"
     ]
   }
 }

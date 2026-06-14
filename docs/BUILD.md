@@ -64,36 +64,42 @@ eas build -p android --profile preview
 Download the APK from the URL EAS prints (or expo.dev), then `adb install` it or
 open it on the phone.
 
-## Release hardening (before publishing)
+## Release hardening
 
-A debug build is fine for development, but a **published** release needs three things the
-default Expo template does not set up. None can be fully verified without an Android device,
-so they're owner steps — the app.json permission surface (below) is the only part wired in
-the repo today.
+A debug build is fine for development; a real release build needs two things the default Expo
+template does not set up. **Both are now wired in the repo** (via config — `android/` stays
+git-ignored under CNG); the only manual step left is generating your own keystore, because the
+signing secret must never live in git.
 
-### 1. Real signing key (not the debug keystore)
+### 1. Real signing key (not the debug keystore) — one-time owner step
 
-The CNG template signs the `release` variant with the shared **debug** keystore — that
-**cannot be published to Play** and gives no key integrity. Generate a real upload key:
+The CNG template signs the `release` variant with the shared **debug** keystore — that **cannot
+be published to Play** and gives no key integrity. The repo's [`plugins/withReleaseSigning.js`](../plugins/withReleaseSigning.js)
+config plugin replaces that at prebuild time with a `release` signingConfig that reads a
+git-ignored `credentials/keystore.properties`. **If that file is absent it falls back to debug
+signing**, so contributors and CI still build with no keystore.
 
-```bash
-eas credentials            # managed: EAS generates/stores the upload keystore
-# — or, for a local Gradle build, create a keystore and a git-ignored
-#   android/keystore.properties (storeFile/storePassword/keyAlias/keyPassword).
-```
-
-`*.keystore` is already git-ignored — never commit a keystore or its passwords.
-
-### 2. R8 minification + resource shrinking
-
-Release builds are **not** minified today, so the artifact is larger than necessary — which
-matters for an app that pulls ~1 GB of models. Because `android/` is git-ignored (CNG),
-enable this via the **`expo-build-properties`** config plugin (not `gradle.properties`,
-which a prebuild would overwrite):
+Generate your upload key once (from the repo root) and create the properties file:
 
 ```bash
-npx expo install expo-build-properties
+# 1. generate the keystore (answer the prompts; remember the passwords)
+keytool -genkeypair -v \
+  -keystore credentials/upload.keystore \
+  -alias upload -keyalg RSA -keysize 2048 -validity 10000
+
+# 2. create credentials/keystore.properties from the template and fill in your passwords
+cp credentials/keystore.properties.example credentials/keystore.properties
+$EDITOR credentials/keystore.properties
 ```
+
+`credentials/` is git-ignored (only `keystore.properties.example` is tracked), and `*.keystore`
+/ `*.jks` are ignored too — **never commit a keystore or its passwords, and back the keystore up
+somewhere safe** (losing it means you can't ship an update under the same key).
+
+### 2. R8 minification + resource shrinking — wired via `expo-build-properties`
+
+Enabled in [`app.json`](../app.json) (CNG-safe; not `gradle.properties`, which a prebuild would
+overwrite):
 
 ```jsonc
 // app.json → expo.plugins
@@ -104,20 +110,26 @@ npx expo install expo-build-properties
       "enableProguardInReleaseBuilds": true,
       "enableShrinkResourcesInReleaseBuilds": true,
       // react-native-executorch ships NO consumer ProGuard rules and is reached via
-      // JNI/reflection, so R8 can strip classes the release build needs. Add keeps for
-      // its native package — confirm the exact package from
-      //   node_modules/react-native-executorch/android
-      // before trusting these, e.g.:
+      // JNI/TurboModules, so R8 must not strip/obfuscate its binding package.
       "extraProguardRules": "-keep class com.swmansion.rnexecutorch.** { *; }"
     }
   }
 ]
 ```
 
-> ⚠️ Deliberately **not enabled in the repo by default.** It only affects the release build,
-> which can't be verified here (no Android SDK; on-device inference is still pending — see the
-> README status). After enabling, **smoke-test a release build on a physical device** and
-> adjust the keep rules if anything is stripped.
+### Build + verify a release
+
+```bash
+npx expo prebuild -p android --clean   # regenerate android/ with both plugins applied
+cd android && ./gradlew assembleRelease
+#   → android/app/build/outputs/apk/release/app-release.apk
+adb install -r app/build/outputs/apk/release/app-release.apk
+```
+
+> ⚠️ R8 only affects the **release** build (debug is verified — OnePlus 15, 2026-06-13). Because
+> executorch is reached via JNI, a wrong/missing keep rule won't fail the build — it fails at
+> runtime. So after a release build, **run the `/dev/smoke` checks on a physical device** and
+> confirm OCR/STT/LLM still run; widen the keep rules if anything was stripped.
 
 ### 3. Permission surface
 
