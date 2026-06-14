@@ -19,13 +19,14 @@ function QuickAction({
   icon: keyof typeof Ionicons.glyphMap
   label: string
 }) {
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   return (
     <Link href={href} asChild>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={label}
         className="flex-1 items-center rounded-2xl border border-border bg-surface py-4 active:opacity-70"
+        style={skin === 'minimal' ? { borderRadius: tokens.radiusCard } : undefined}
       >
         <Ionicons name={icon} size={22} color={tokens.colors.accent} />
         <Text className="mt-1.5 text-xs font-medium text-fg">{label}</Text>

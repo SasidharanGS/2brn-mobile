@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native'
 
 import { Card } from '@/components/ui'
 import { type LocalMemory } from '@/db/local'
+import { useTheme } from '@/theme/ThemeContext'
 import { DANGER } from '@/theme/colors'
 import { prettyTime } from '@/utils/date'
 
@@ -16,6 +17,7 @@ export function MemoryCard({
   score?: number
   onDelete: () => void
 }) {
+  const { skin, tokens } = useTheme()
   return (
     <Card className="mb-2">
       {m.title ? (
@@ -33,6 +35,11 @@ export function MemoryCard({
             <Text
               key={t}
               className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-muted"
+              style={
+                skin === 'minimal'
+                  ? { borderRadius: tokens.radiusPill, backgroundColor: tokens.colors.rule }
+                  : undefined
+              }
             >
               #{t}
             </Text>
