@@ -67,4 +67,29 @@ describe('createHttpClient', () => {
     await client().setPaused(true)
     expect(lastCall()[0]).toBe('http://host:7842/settings/paused?paused=true')
   })
+
+  it('fires onUnauthorized on a 401 and still throws ApiError', async () => {
+    mockFetch.mockResolvedValue(res(undefined, false, 401))
+    const onUnauthorized = jest.fn()
+    const c = createHttpClient({ baseUrl: 'http://host:7842', token: 'revoked', onUnauthorized })
+    await expect(c.getStatus()).rejects.toMatchObject({ status: 401 })
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
+  })
+
+  it('fires onUnauthorized at most once across repeated 401s on the same client', async () => {
+    mockFetch.mockResolvedValue(res(undefined, false, 401))
+    const onUnauthorized = jest.fn()
+    const c = createHttpClient({ baseUrl: 'http://host:7842', token: 'revoked', onUnauthorized })
+    await expect(c.getStatus()).rejects.toBeInstanceOf(ApiError)
+    await expect(c.getStatus()).rejects.toBeInstanceOf(ApiError)
+    expect(onUnauthorized).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not fire onUnauthorized on non-401 errors', async () => {
+    mockFetch.mockResolvedValue(res(undefined, false, 500))
+    const onUnauthorized = jest.fn()
+    const c = createHttpClient({ baseUrl: 'http://host:7842', token: 'tok', onUnauthorized })
+    await expect(c.getStatus()).rejects.toBeInstanceOf(ApiError)
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
 })

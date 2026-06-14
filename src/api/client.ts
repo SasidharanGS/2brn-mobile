@@ -30,6 +30,14 @@ export class ApiError extends Error {
 export interface ApiConfig {
   baseUrl: string
   token: string
+  /**
+   * Called (at most once per client) the first time a request comes back 401 —
+   * i.e. this device's token was revoked on the desktop, or is otherwise no
+   * longer accepted. Lets the app auto-unpair and return to pairing instead of
+   * looping on errors. Optional: validation clients leave it unset so an
+   * explicit pair attempt keeps its own "token rejected" messaging.
+   */
+  onUnauthorized?: () => void
 }
 
 export interface ChatStreamOptions {
@@ -42,11 +50,20 @@ export interface ChatStreamOptions {
 /** Build a client bound to a specific daemon base URL + bearer token. */
 export function createHttpClient(cfg: ApiConfig) {
   const base = cfg.baseUrl.replace(/\/+$/, '')
+  let unauthorizedNotified = false
 
   function headers(extra?: Record<string, string>): Record<string, string> {
     const h: Record<string, string> = { ...extra }
     if (cfg.token) h.Authorization = `Bearer ${cfg.token}`
     return h
+  }
+
+  /** Fire onUnauthorized once on the first 401 (a revoked / rejected token). */
+  function noteStatus(status: number): void {
+    if (status === 401 && !unauthorizedNotified) {
+      unauthorizedNotified = true
+      cfg.onUnauthorized?.()
+    }
   }
 
   async function req<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -61,7 +78,10 @@ export function createHttpClient(cfg: ApiConfig) {
     } catch (e) {
       throw new ApiError(0, `Network error reaching ${path}: ${(e as Error).message}`)
     }
-    if (!res.ok) throw new ApiError(res.status, `${method} ${path} failed: ${res.status}`)
+    if (!res.ok) {
+      noteStatus(res.status)
+      throw new ApiError(res.status, `${method} ${path} failed: ${res.status}`)
+    }
     // Some endpoints return empty bodies; guard JSON parsing.
     const text = await res.text()
     return (text ? JSON.parse(text) : undefined) as T
@@ -84,7 +104,10 @@ export function createHttpClient(cfg: ApiConfig) {
       }),
       signal: opts.signal,
     })
-    if (!res.ok) throw new ApiError(res.status, `POST /chat failed: ${res.status}`)
+    if (!res.ok) {
+      noteStatus(res.status)
+      throw new ApiError(res.status, `POST /chat failed: ${res.status}`)
+    }
 
     const parser = new SSEParser()
     const emit = function* (events: ReturnType<SSEParser['push']>): Generator<string> {

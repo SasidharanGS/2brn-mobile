@@ -27,6 +27,18 @@ const ConnectionContext = createContext<ConnectionContextValue | null>(null)
 export function ConnectionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ConnectionState>({ status: 'loading' })
 
+  const unpair = useCallback(async () => {
+    await Promise.all([SecureStore.deleteItemAsync(K_BASE), SecureStore.deleteItemAsync(K_TOKEN)]).catch(
+      () => undefined,
+    )
+    setState({ status: 'unpaired' })
+  }, [])
+
+  // A 401 from the daemon means this device's token was revoked (or the daemon
+  // tightened the master token to loopback). Drop the pairing so the app falls
+  // back to the Connect-a-device screen instead of looping on errors.
+  const onUnauthorized = useCallback(() => { void unpair() }, [unpair])
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -41,7 +53,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
         ])
         if (cancelled) return
         if (baseUrl && token) {
-          setState({ status: 'paired', baseUrl, client: createHttpClient({ baseUrl, token }), mock: false })
+          setState({ status: 'paired', baseUrl, client: createHttpClient({ baseUrl, token, onUnauthorized }), mock: false })
         } else {
           setState({ status: 'unpaired' })
         }
@@ -52,7 +64,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [onUnauthorized])
 
   const pair = useCallback(async (payload: PairingPayload): Promise<ConnectionCheck> => {
     const check = await validateConnection(payload.baseUrl, payload.token)
@@ -62,20 +74,13 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
       setState({
         status: 'paired',
         baseUrl: payload.baseUrl,
-        client: createHttpClient(payload),
+        client: createHttpClient({ ...payload, onUnauthorized }),
         version: check.version,
         mock: false,
       })
     }
     return check
-  }, [])
-
-  const unpair = useCallback(async () => {
-    await Promise.all([SecureStore.deleteItemAsync(K_BASE), SecureStore.deleteItemAsync(K_TOKEN)]).catch(
-      () => undefined,
-    )
-    setState({ status: 'unpaired' })
-  }, [])
+  }, [onUnauthorized])
 
   const value = useMemo<ConnectionContextValue>(() => ({ state, pair, unpair }), [state, pair, unpair])
   return <ConnectionContext.Provider value={value}>{children}</ConnectionContext.Provider>
