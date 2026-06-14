@@ -16,7 +16,8 @@ import { ApiError } from '@/api/client'
 import { TASK_CATEGORIES } from '@/api/types'
 import { Markdown } from '@/components/Markdown'
 import { useApi } from '@/connection/ConnectionContext'
-import { categoryChip, MUTED, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
+import { categoryChip } from '@/theme/colors'
 import { todayISODate } from '@/utils/date'
 
 interface Msg {
@@ -31,6 +32,7 @@ const nextId = () => `m${idSeq++}`
 export default function ChatScreen() {
   const api = useApi()
   const insets = useSafeAreaInsets()
+  const { tokens } = useTheme()
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -94,13 +96,10 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={insets.bottom + 56}
-      className="flex-1 bg-slate-50 dark:bg-slate-950"
+      className="flex-1 bg-bg"
     >
-      <View
-        style={{ paddingTop: insets.top }}
-        className="border-b border-slate-200 px-4 pb-2 dark:border-slate-800"
-      >
-        <Text className="py-2 text-xl font-bold text-slate-900 dark:text-slate-50">Chat</Text>
+      <View style={{ paddingTop: insets.top }} className="border-b border-rule px-4 pb-2">
+        <Text className="py-2 text-xl font-bold text-fg">Chat</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
           <FilterChip
             label="Today only"
@@ -126,11 +125,11 @@ export default function ChatScreen() {
       >
         {messages.length === 0 ? (
           <View className="mt-10 items-center px-6">
-            <Ionicons name="chatbubble-ellipses-outline" size={40} color={PRIMARY} />
-            <Text className="mt-3 text-center text-base font-semibold text-slate-700 dark:text-slate-200">
+            <Ionicons name="chatbubble-ellipses-outline" size={40} color={tokens.colors.accent} />
+            <Text className="mt-3 text-center text-base font-semibold text-fg">
               Ask your second brain
             </Text>
-            <Text className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
+            <Text className="mt-1 text-center text-sm text-muted">
               “What did I work on this morning?” · “Summarize my research today.”
             </Text>
           </View>
@@ -141,22 +140,22 @@ export default function ChatScreen() {
 
       <View
         style={{ paddingBottom: insets.bottom + 8 }}
-        className="flex-row items-end gap-2 border-t border-slate-200 px-3 pt-2 dark:border-slate-800"
+        className="flex-row items-end gap-2 border-t border-rule px-3 pt-2"
       >
         <TextInput
           value={input}
           onChangeText={setInput}
           placeholder="Ask about your day…"
-          placeholderTextColor={MUTED}
+          placeholderTextColor={tokens.colors.muted}
           multiline
-          className="max-h-28 flex-1 rounded-2xl border border-slate-300 px-4 py-2.5 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+          className="max-h-28 flex-1 rounded-2xl border border-border px-4 py-2.5 text-fg"
         />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={streaming ? 'Stop' : 'Send'}
           onPress={streaming ? stop : send}
           disabled={!streaming && !input.trim()}
-          className={`h-11 w-11 items-center justify-center rounded-full ${streaming ? 'bg-red-500' : input.trim() ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
+          className={`h-11 w-11 items-center justify-center rounded-full ${streaming ? 'bg-red-500' : input.trim() ? 'bg-primary' : 'bg-surface-2'}`}
         >
           <Ionicons name={streaming ? 'stop' : 'arrow-up'} size={20} color="#fff" />
         </Pressable>
@@ -176,16 +175,23 @@ function FilterChip({
   onPress: () => void
   color?: string
 }) {
+  const { tokens } = useTheme()
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
-      className={`mr-2 rounded-full border px-3 py-1 ${active ? 'border-primary bg-primary/15' : 'border-slate-300 dark:border-slate-700'}`}
+      className="mr-2 rounded-full border px-3 py-1"
+      style={{
+        // 8-digit hex = accent at ~15% alpha for the active fill (no opacity-modifier
+        // on a var() color, which Tailwind can't alpha-composite).
+        borderColor: active ? tokens.colors.accent : tokens.colors.border,
+        backgroundColor: active ? `${tokens.colors.accent}26` : undefined,
+      }}
     >
       <Text
         style={active && color ? { color } : undefined}
-        className={`text-xs font-medium capitalize ${active ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}
+        className={`text-xs font-medium capitalize ${active ? 'text-primary' : 'text-muted'}`}
       >
         {label}
       </Text>
@@ -194,17 +200,18 @@ function FilterChip({
 }
 
 function Bubble({ msg, streaming }: { msg: Msg; streaming: boolean }) {
+  const { tokens } = useTheme()
   const isUser = msg.role === 'user'
   const empty = msg.content.length === 0
   return (
     <View className={`mb-3 max-w-[88%] ${isUser ? 'self-end' : 'self-start'}`}>
       <View
-        className={`rounded-2xl px-3.5 py-2.5 ${isUser ? 'bg-primary' : 'border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900'}`}
+        className={`rounded-2xl px-3.5 py-2.5 ${isUser ? 'bg-primary' : 'border border-border bg-surface'}`}
       >
         {isUser ? (
           <Text className="text-base text-white">{msg.content}</Text>
         ) : empty && streaming ? (
-          <ActivityIndicator color={PRIMARY} />
+          <ActivityIndicator color={tokens.colors.accent} />
         ) : (
           <Markdown>{msg.content}</Markdown>
         )}

@@ -24,11 +24,12 @@ import { ANSWER_CONTEXT_SIZE } from '@/ml/llm'
 import { useLlm } from '@/ml/LlmContext'
 import { rankBySimilarity, type SearchHit } from '@/ml/search'
 import { getAutoEnrich, setAutoEnrich as persistAutoEnrich } from '@/settings/prefs'
-import { MUTED, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 export default function MemoriesScreen() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { tokens } = useTheme()
   const { embed, isReady, downloadProgress } = useEmbeddings()
   const { answer, isGenerating, downloadProgress: llmDownloadProgress } = useLlm()
 
@@ -109,7 +110,7 @@ export default function MemoriesScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-slate-50 dark:bg-slate-950"
+      className="flex-1 bg-bg"
     >
       <View
         style={{ paddingTop: insets.top + 8 }}
@@ -122,17 +123,17 @@ export default function MemoriesScreen() {
               onPress={() => router.back()}
               className="mr-1 h-9 w-9 items-center justify-center"
             >
-              <Ionicons name="chevron-back" size={24} color={MUTED} />
+              <Ionicons name="chevron-back" size={24} color={tokens.colors.muted} />
             </Pressable>
           ) : null}
-          <Text className="text-xl font-bold text-slate-900 dark:text-slate-50">On this phone</Text>
+          <Text className="text-xl font-bold text-fg">On this phone</Text>
         </View>
         <Pressable
           accessibilityLabel="Connect a desktop"
           onPress={() => router.push('/pair')}
           className="flex-row items-center rounded-full px-3 py-1.5"
         >
-          <Ionicons name="desktop-outline" size={15} color={PRIMARY} />
+          <Ionicons name="desktop-outline" size={15} color={tokens.colors.accent} />
           <Text className="ml-1.5 text-sm font-medium text-primary">Connect</Text>
         </Pressable>
       </View>
@@ -142,7 +143,7 @@ export default function MemoriesScreen() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
       >
         {!isReady ? (
-          <Text className="mb-3 text-center text-xs text-slate-400 dark:text-slate-500">
+          <Text className="mb-3 text-center text-xs text-muted">
             Preparing on-device search… {Math.round(downloadProgress * 100)}%
           </Text>
         ) : null}
@@ -158,10 +159,8 @@ export default function MemoriesScreen() {
 
         <View className="mb-4 flex-row items-center justify-between px-1">
           <View className="flex-1 pr-3">
-            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Auto-enrich with AI
-            </Text>
-            <Text className="text-xs text-slate-400 dark:text-slate-500">
+            <Text className="text-sm font-medium text-fg">Auto-enrich with AI</Text>
+            <Text className="text-xs text-muted">
               Summarize &amp; tag new notes on-device (downloads a model)
             </Text>
           </View>
@@ -204,7 +203,7 @@ export default function MemoriesScreen() {
         {searching ? <ActivityIndicator className="my-4" /> : null}
 
         {shown.length === 0 ? (
-          <Text className="mt-8 text-center text-sm text-slate-400 dark:text-slate-500">
+          <Text className="mt-8 text-center text-sm text-muted">
             {results
               ? 'No matches.'
               : 'Nothing saved yet. Add a note above, or share something into 2brn.'}

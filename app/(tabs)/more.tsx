@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native'
 import { Screen } from '@/components/Screen'
 import { Card, ScreenTitle, SectionTitle } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
-import { MUTED, PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 interface MenuItem {
   href: string
@@ -43,19 +43,20 @@ const ITEMS: MenuItem[] = [
 ]
 
 function Row({ item }: { item: MenuItem }) {
+  const { tokens } = useTheme()
   return (
     <Link href={item.href} asChild>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={item.label}
-        className="flex-row items-center px-4 py-3.5 active:bg-slate-100 dark:active:bg-slate-800"
+        className="flex-row items-center px-4 py-3.5 active:bg-surface-2"
       >
-        <Ionicons name={item.icon} size={20} color={PRIMARY} />
+        <Ionicons name={item.icon} size={20} color={tokens.colors.accent} />
         <View className="ml-3 flex-1">
-          <Text className="text-base text-slate-900 dark:text-slate-100">{item.label}</Text>
-          <Text className="text-xs text-slate-500 dark:text-slate-400">{item.hint}</Text>
+          <Text className="text-base text-fg">{item.label}</Text>
+          <Text className="text-xs text-muted">{item.hint}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={MUTED} />
+        <Ionicons name="chevron-forward" size={18} color={tokens.colors.muted} />
       </Pressable>
     </Link>
   )
@@ -69,22 +70,18 @@ export default function More() {
 
       <SectionTitle>Connected to</SectionTitle>
       <Card className="mb-4">
-        <Text className="text-sm text-slate-900 dark:text-slate-100">
-          {state.status === 'paired' ? state.baseUrl : '—'}
-        </Text>
+        <Text className="text-sm text-fg">{state.status === 'paired' ? state.baseUrl : '—'}</Text>
         {state.status === 'paired' && state.mock ? (
           <Text className="mt-0.5 text-xs font-medium text-amber-500">Mock mode · demo data</Text>
         ) : state.status === 'paired' && state.version ? (
-          <Text className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            daemon {state.version}
-          </Text>
+          <Text className="mt-0.5 text-xs text-muted">daemon {state.version}</Text>
         ) : null}
       </Card>
 
       <Card className="overflow-hidden p-0">
         {ITEMS.map((it, i) => (
           <View key={it.href}>
-            {i > 0 ? <View className="ml-12 h-px bg-slate-100 dark:bg-slate-800" /> : null}
+            {i > 0 ? <View className="ml-12 h-px bg-rule" /> : null}
             <Row item={it} />
           </View>
         ))}

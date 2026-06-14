@@ -7,7 +7,7 @@ import { Screen } from '@/components/Screen'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
 import { useInsightsSummary, useStatus } from '@/hooks/queries'
-import { PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 import { prettyTime, todayISODate } from '@/utils/date'
 
 function QuickAction({
@@ -19,17 +19,16 @@ function QuickAction({
   icon: keyof typeof Ionicons.glyphMap
   label: string
 }) {
+  const { tokens } = useTheme()
   return (
     <Link href={href} asChild>
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={label}
-        className="flex-1 items-center rounded-2xl border border-slate-200 bg-white py-4 active:opacity-70 dark:border-slate-800 dark:bg-slate-900"
+        className="flex-1 items-center rounded-2xl border border-border bg-surface py-4 active:opacity-70"
       >
-        <Ionicons name={icon} size={22} color={PRIMARY} />
-        <Text className="mt-1.5 text-xs font-medium text-slate-700 dark:text-slate-200">
-          {label}
-        </Text>
+        <Ionicons name={icon} size={22} color={tokens.colors.accent} />
+        <Text className="mt-1.5 text-xs font-medium text-fg">{label}</Text>
       </Pressable>
     </Link>
   )
@@ -66,11 +65,9 @@ export default function Home() {
                 <View
                   className={`mr-2 h-2.5 w-2.5 rounded-full ${data.status === 'capturing' ? 'bg-emerald-500' : data.status === 'paused' ? 'bg-amber-500' : 'bg-red-500'}`}
                 />
-                <Text className="font-semibold capitalize text-slate-900 dark:text-slate-100">
-                  {data.status}
-                </Text>
+                <Text className="font-semibold capitalize text-fg">{data.status}</Text>
               </View>
-              <Text className="text-xs text-slate-500 dark:text-slate-400">
+              <Text className="text-xs text-muted">
                 {data.last_captured_at
                   ? `Last capture ${prettyTime(data.last_captured_at)}`
                   : 'No captures yet'}
@@ -90,9 +87,7 @@ export default function Home() {
         isEmpty={(data) => data.categories.length === 0}
         empty={null}
         errorFallback={
-          <Text className="mb-4 text-xs text-slate-400 dark:text-slate-500">
-            Couldn&apos;t load today&apos;s mix.
-          </Text>
+          <Text className="mb-4 text-xs text-muted">Couldn&apos;t load today&apos;s mix.</Text>
         }
       >
         {(data) => (
@@ -103,9 +98,7 @@ export default function Home() {
                 {data.categories.slice(0, 5).map((c) => (
                   <View key={c.task_category} className="flex-row items-center">
                     <CategoryChip category={c.task_category} />
-                    <Text className="ml-1 text-xs text-slate-500 dark:text-slate-400">
-                      {c.pct}%
-                    </Text>
+                    <Text className="ml-1 text-xs text-muted">{c.pct}%</Text>
                   </View>
                 ))}
               </View>

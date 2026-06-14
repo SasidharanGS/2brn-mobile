@@ -36,12 +36,9 @@ export function stateChip(state?: string | null): ChipColors {
   return STATE_CHIP[state ?? 'idle'] ?? STATE_CHIP.idle
 }
 
-// Brand accent, reused for the tab bar and primary actions.
-export const PRIMARY = '#60a5fa'
-
-// Semantic UI accents for icon/indicator colors. Reference these instead of inline hex so
-// the palette has one source of truth; reserve inline style={{ color }} only for the
-// genuinely dynamic chip/meter colors above.
+// Semantic accents that keep their hue across both skins (destructive + success
+// are functional signals, not theme color). Skin-aware colors — accent, fg, muted,
+// borders, the ink ramp — live in the theme tokens (see theme/tokens.ts) and are
+// read via useTheme(); the brand accent is now tokens.colors.accent.
 export const DANGER = '#f87171' // destructive actions (delete)
-export const MUTED = '#94a3b8' // secondary / placeholder icons
 export const SUCCESS = '#34d399' // success confirmation
