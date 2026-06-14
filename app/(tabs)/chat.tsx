@@ -32,7 +32,7 @@ const nextId = () => `m${idSeq++}`
 export default function ChatScreen() {
   const api = useApi()
   const insets = useSafeAreaInsets()
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const [messages, setMessages] = useState<Msg[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
@@ -155,9 +155,25 @@ export default function ChatScreen() {
           accessibilityLabel={streaming ? 'Stop' : 'Send'}
           onPress={streaming ? stop : send}
           disabled={!streaming && !input.trim()}
-          className={`h-11 w-11 items-center justify-center rounded-full ${streaming ? 'bg-red-500' : input.trim() ? 'bg-primary' : 'bg-surface-2'}`}
+          className="h-11 w-11 items-center justify-center"
+          style={{
+            borderRadius: skin === 'minimal' ? tokens.radiusPill : 9999,
+            backgroundColor: streaming
+              ? '#ef4444'
+              : input.trim()
+                ? tokens.colors.accent
+                : skin === 'minimal'
+                  ? tokens.colors.rule
+                  : tokens.colors.surface2,
+          }}
         >
-          <Ionicons name={streaming ? 'stop' : 'arrow-up'} size={20} color="#fff" />
+          <Ionicons
+            name={streaming ? 'stop' : 'arrow-up'}
+            size={20}
+            color={
+              streaming || input.trim() ? (skin === 'minimal' ? tokens.colors.bg : '#fff') : tokens.colors.muted
+            }
+          />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -200,16 +216,25 @@ function FilterChip({
 }
 
 function Bubble({ msg, streaming }: { msg: Msg; streaming: boolean }) {
-  const { tokens } = useTheme()
+  const { skin, tokens } = useTheme()
   const isUser = msg.role === 'user'
   const empty = msg.content.length === 0
+  const minimal = skin === 'minimal'
   return (
     <View className={`mb-3 max-w-[88%] ${isUser ? 'self-end' : 'self-start'}`}>
       <View
-        className={`rounded-2xl px-3.5 py-2.5 ${isUser ? 'bg-primary' : 'border border-border bg-surface'}`}
+        // Minimal: square (3px) bubbles — you = --fg fill, 2brn = --ink-1 fill, no border.
+        className={`px-3.5 py-2.5 ${minimal ? '' : `rounded-2xl ${isUser ? 'bg-primary' : 'border border-border bg-surface'}`}`}
+        style={
+          minimal
+            ? { borderRadius: tokens.radiusPill, backgroundColor: isUser ? tokens.colors.fg : tokens.colors.ink[1] }
+            : undefined
+        }
       >
         {isUser ? (
-          <Text className="text-base text-white">{msg.content}</Text>
+          <Text className="text-base" style={{ color: minimal ? tokens.colors.bg : '#fff', fontFamily: tokens.fontSans }}>
+            {msg.content}
+          </Text>
         ) : empty && streaming ? (
           <ActivityIndicator color={tokens.colors.accent} />
         ) : (
