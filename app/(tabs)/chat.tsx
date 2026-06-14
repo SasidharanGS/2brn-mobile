@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ApiError } from '@/api/client'
 import { TASK_CATEGORIES } from '@/api/types'
+import { AppText } from '@/components/AppText'
 import { Markdown } from '@/components/Markdown'
 import { useApi } from '@/connection/ConnectionContext'
 import { useTheme } from '@/theme/ThemeContext'
@@ -99,16 +100,9 @@ export default function ChatScreen() {
       className="flex-1 bg-bg"
     >
       <View style={{ paddingTop: insets.top }} className="border-b border-rule px-4 pb-2">
-        <Text
-          className="py-2 text-xl font-bold text-fg"
-          style={{
-            fontFamily: tokens.fontSans,
-            textTransform: tokens.lowercase ? 'lowercase' : undefined,
-            fontWeight: tokens.lowercase ? '400' : undefined,
-          }}
-        >
+        <AppText className="py-2 text-xl font-bold text-fg" emphasis>
           Chat
-        </Text>
+        </AppText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
           <FilterChip
             label="Today only"
@@ -135,12 +129,12 @@ export default function ChatScreen() {
         {messages.length === 0 ? (
           <View className="mt-10 items-center px-6">
             <Ionicons name="chatbubble-ellipses-outline" size={40} color={tokens.colors.accent} />
-            <Text className="mt-3 text-center text-base font-semibold text-fg">
+            <AppText className="mt-3 text-center text-base font-semibold text-fg" emphasis>
               Ask your second brain
-            </Text>
-            <Text className="mt-1 text-center text-sm text-muted">
+            </AppText>
+            <AppText className="mt-1 text-center text-sm text-muted">
               “What did I work on this morning?” · “Summarize my research today.”
-            </Text>
+            </AppText>
           </View>
         ) : (
           messages.map((m) => <Bubble key={m.id} msg={m} streaming={streaming} />)
