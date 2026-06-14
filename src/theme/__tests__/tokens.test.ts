@@ -2,8 +2,11 @@ import { describe, expect, it } from '@jest/globals'
 
 import {
   getTokens,
+  inkColor,
   resolveMode,
   SKINS,
+  STATE_INK,
+  stateInk,
   THEME,
   THEME_MODES,
   themeVars,
@@ -76,6 +79,28 @@ describe('theme tokens', () => {
         expect(getTokens(skin, mode)).toBe(THEME[skin][mode])
       }
     }
+  })
+
+  it('stateInk maps productivity states onto the 0–4 ramp (idle→peak), default 0', () => {
+    expect(stateInk('deep_work')).toBe(4)
+    expect(stateInk('focused')).toBe(4)
+    expect(stateInk('productive')).toBe(3)
+    expect(stateInk('communication')).toBe(2)
+    expect(stateInk('distracted')).toBe(1)
+    expect(stateInk('idle')).toBe(0)
+    expect(stateInk(undefined)).toBe(0)
+    expect(stateInk('nonsense')).toBe(0)
+    // every mapped level is a valid ramp index
+    for (const lvl of Object.values(STATE_INK)) expect(lvl).toBeGreaterThanOrEqual(0)
+    for (const lvl of Object.values(STATE_INK)) expect(lvl).toBeLessThanOrEqual(4)
+  })
+
+  it('inkColor returns the ramp hex for a level and clamps out-of-range', () => {
+    const t = THEME.minimal.light
+    expect(inkColor(t, 0)).toBe(t.colors.ink[0])
+    expect(inkColor(t, 4)).toBe(t.colors.ink[4])
+    expect(inkColor(t, -3)).toBe(t.colors.ink[0])
+    expect(inkColor(t, 99)).toBe(t.colors.ink[4])
   })
 
   it('themeVars maps every color to a `--`-prefixed CSS variable', () => {
