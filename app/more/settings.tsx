@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Constants from 'expo-constants'
 import { useRouter } from 'expo-router'
-import { Alert, Linking, Pressable, Switch, Text, View } from 'react-native'
+import { Alert, Linking, Pressable, Switch, View } from 'react-native'
 
 import { queryKeys } from '@/api/queryKeys'
+import { AppText } from '@/components/AppText'
 import { Header } from '@/components/Header'
 import { QueryState } from '@/components/QueryState'
 import { Screen } from '@/components/Screen'
@@ -16,10 +17,10 @@ import { SKINS, THEME_MODES } from '@/theme/tokens'
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-center justify-between py-1.5">
-      <Text className="text-sm text-muted">{label}</Text>
-      <Text className="ml-3 flex-1 text-right text-sm text-fg" numberOfLines={1}>
+      <AppText className="text-sm text-muted">{label}</AppText>
+      <AppText className="ml-3 flex-1 text-right text-sm text-fg" numberOfLines={1} preserveCase>
         {value}
-      </Text>
+      </AppText>
     </View>
   )
 }
@@ -56,12 +57,12 @@ function Segmented<T extends string>({
               borderLeftColor: tokens.colors.border,
             }}
           >
-            <Text
+            <AppText
               className="text-xs font-semibold capitalize"
               style={{ color: active ? activeText : tokens.colors.fg }}
             >
               {opt}
-            </Text>
+            </AppText>
           </Pressable>
         )
       })}
@@ -110,11 +111,11 @@ export default function SettingsScreen() {
         <SectionTitle>Appearance</SectionTitle>
         <Card className="mb-4">
           <View className="flex-row items-center justify-between py-1.5">
-            <Text className="text-sm text-fg">Theme</Text>
+            <AppText className="text-sm text-fg">Theme</AppText>
             <Segmented value={skin} options={SKINS} onChange={setSkin} />
           </View>
           <View className="flex-row items-center justify-between py-1.5">
-            <Text className="text-sm text-fg">Mode</Text>
+            <AppText className="text-sm text-fg">Mode</AppText>
             <Segmented value={mode} options={THEME_MODES} onChange={setMode} />
           </View>
         </Card>
@@ -140,10 +141,10 @@ export default function SettingsScreen() {
               <Card className="mb-4">
                 <View className="flex-row items-center justify-between py-1">
                   <View className="flex-1 pr-3">
-                    <Text className="text-sm text-fg">Pause capture</Text>
-                    <Text className="text-xs text-muted">
+                    <AppText className="text-sm text-fg">Pause capture</AppText>
+                    <AppText className="text-xs text-muted">
                       Stops the desktop from taking new screenshots.
-                    </Text>
+                    </AppText>
                   </View>
                   <Switch
                     value={data.paused}
@@ -160,10 +161,10 @@ export default function SettingsScreen() {
                 <Row label="Chat model" value={data.chat_provider.model || '—'} />
                 <Row label="Chat endpoint" value={data.chat_provider.base_url || '—'} />
                 <Row label="Embed model" value={data.embed_provider.model || '—'} />
-                <Text className="mt-2 text-xs text-muted">
+                <AppText className="mt-2 text-xs text-muted" preserveCase>
                   Provider URLs and API keys are managed on the desktop app to keep secrets off your
                   phone.
-                </Text>
+                </AppText>
               </Card>
             </>
           )}
@@ -172,27 +173,28 @@ export default function SettingsScreen() {
         <SectionTitle>About</SectionTitle>
         <Card>
           <Row label="App version" value={Constants.expoConfig?.version ?? '0.1.0'} />
-          <Text className="mt-2 text-sm text-muted">
+          <AppText className="mt-2 text-sm text-muted" preserveCase>
             2brn keeps your captures on your phone — embedded, searchable, and answered on-device. A
             desktop is optional; when paired it syncs over your local network, and nothing leaves
             it.
-          </Text>
-          <Text
+          </AppText>
+          <AppText
             accessibilityRole="link"
             onPress={() => void Linking.openURL('https://github.com/SasidharanGS/2brn')}
             className="mt-2 text-sm text-primary"
+            preserveCase
           >
             github.com/SasidharanGS/2brn
-          </Text>
+          </AppText>
         </Card>
 
         {__DEV__ ? (
           <>
             <SectionTitle>Developer</SectionTitle>
             <Card>
-              <Text className="mb-2 text-sm text-muted">
+              <AppText className="mb-2 text-sm text-muted" preserveCase>
                 Verify the on-device models run on this device.
-              </Text>
+              </AppText>
               <Button
                 label="On-device model smoke test"
                 variant="secondary"

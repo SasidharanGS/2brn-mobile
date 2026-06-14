@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Link } from 'expo-router'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 
+import { AppText } from '@/components/AppText'
 import { Screen } from '@/components/Screen'
 import { Card, ScreenTitle, SectionTitle } from '@/components/ui'
 import { useConnection } from '@/connection/ConnectionContext'
@@ -53,8 +54,8 @@ function Row({ item }: { item: MenuItem }) {
       >
         <Ionicons name={item.icon} size={20} color={tokens.colors.accent} />
         <View className="ml-3 flex-1">
-          <Text className="text-base text-fg">{item.label}</Text>
-          <Text className="text-xs text-muted">{item.hint}</Text>
+          <AppText className="text-base text-fg">{item.label}</AppText>
+          <AppText className="text-xs text-muted">{item.hint}</AppText>
         </View>
         <Ionicons name="chevron-forward" size={18} color={tokens.colors.muted} />
       </Pressable>
@@ -70,11 +71,11 @@ export default function More() {
 
       <SectionTitle>Connected to</SectionTitle>
       <Card className="mb-4">
-        <Text className="text-sm text-fg">{state.status === 'paired' ? state.baseUrl : '—'}</Text>
+        <AppText className="text-sm text-fg" preserveCase>{state.status === 'paired' ? state.baseUrl : '—'}</AppText>
         {state.status === 'paired' && state.mock ? (
-          <Text className="mt-0.5 text-xs font-medium text-amber-500">Mock mode · demo data</Text>
+          <AppText className="mt-0.5 text-xs font-medium text-amber-500">Mock mode · demo data</AppText>
         ) : state.status === 'paired' && state.version ? (
-          <Text className="mt-0.5 text-xs text-muted">daemon {state.version}</Text>
+          <AppText className="mt-0.5 text-xs text-muted" preserveCase>daemon {state.version}</AppText>
         ) : null}
       </Card>
 

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Link } from 'expo-router'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, View } from 'react-native'
 
+import { AppText } from '@/components/AppText'
 import { QueryState } from '@/components/QueryState'
 import { Screen } from '@/components/Screen'
 import { Card, CategoryChip, ScreenTitle, SectionTitle, Stat } from '@/components/ui'
@@ -29,7 +30,7 @@ function QuickAction({
         style={skin === 'minimal' ? { borderRadius: tokens.radiusCard } : undefined}
       >
         <Ionicons name={icon} size={22} color={tokens.colors.accent} />
-        <Text className="mt-1.5 text-xs font-medium text-fg">{label}</Text>
+        <AppText className="mt-1.5 text-xs font-medium text-fg">{label}</AppText>
       </Pressable>
     </Link>
   )
@@ -66,13 +67,13 @@ export default function Home() {
                 <View
                   className={`mr-2 h-2.5 w-2.5 rounded-full ${data.status === 'capturing' ? 'bg-emerald-500' : data.status === 'paused' ? 'bg-amber-500' : 'bg-red-500'}`}
                 />
-                <Text className="font-semibold capitalize text-fg">{data.status}</Text>
+                <AppText className="font-semibold capitalize text-fg" emphasis>{data.status}</AppText>
               </View>
-              <Text className="text-xs text-muted">
+              <AppText className="text-xs text-muted">
                 {data.last_captured_at
                   ? `Last capture ${prettyTime(data.last_captured_at)}`
                   : 'No captures yet'}
-              </Text>
+              </AppText>
             </View>
             <View className="mt-4 flex-row">
               <Stat label="captures today" value={String(data.capture_count_today)} />
@@ -88,7 +89,7 @@ export default function Home() {
         isEmpty={(data) => data.categories.length === 0}
         empty={null}
         errorFallback={
-          <Text className="mb-4 text-xs text-muted">Couldn&apos;t load today&apos;s mix.</Text>
+          <AppText className="mb-4 text-xs text-muted">Couldn&apos;t load today&apos;s mix.</AppText>
         }
       >
         {(data) => (
@@ -99,7 +100,7 @@ export default function Home() {
                 {data.categories.slice(0, 5).map((c) => (
                   <View key={c.task_category} className="flex-row items-center">
                     <CategoryChip category={c.task_category} />
-                    <Text className="ml-1 text-xs text-muted">{c.pct}%</Text>
+                    <AppText className="ml-1 text-xs text-muted" preserveCase>{c.pct}%</AppText>
                   </View>
                 ))}
               </View>
