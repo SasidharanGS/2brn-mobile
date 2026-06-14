@@ -52,7 +52,7 @@ export function MarkdownDocView(props: Props) {
           value={draft}
           onChangeText={setDraft}
           textAlignVertical="top"
-          className="min-h-[320px] rounded-xl border border-slate-300 bg-white p-3 text-base text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          className="min-h-[320px] rounded-xl border border-border bg-surface p-3 text-base text-fg"
         />
         <View className="mt-3 flex-row gap-3">
           <View className="flex-1">
@@ -78,7 +78,7 @@ export function MarkdownDocView(props: Props) {
       <Card>
         <Markdown>{props.content}</Markdown>
       </Card>
-      <Text className="mt-2 px-1 text-xs text-slate-400 dark:text-slate-500">
+      <Text className="mt-2 px-1 text-xs text-muted">
         {props.editedByUser
           ? 'Edited by you'
           : props.generatedAt

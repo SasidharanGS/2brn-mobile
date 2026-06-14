@@ -8,7 +8,7 @@ import { concatFloat32, maxAbsAmplitude, STT_SAMPLE_RATE } from '@/ml/audioWavef
 import { useOcr } from '@/ml/OcrContext'
 import { useSaveMemory } from '@/ml/useSaveMemory'
 import { useStt } from '@/ml/SttContext'
-import { MUTED } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
 /**
  * Capture surface for the on-device home: a text draft plus on-device image (OCR) and
@@ -20,6 +20,7 @@ export function CaptureCard({ onSaved, onReload }: { onSaved: () => void; onRelo
   const { extractText } = useOcr()
   const { transcribe, downloadProgress: sttDownloadProgress } = useStt()
   const saveMemory = useSaveMemory()
+  const { tokens } = useTheme()
 
   const [draft, setDraft] = useState('')
   const [adding, setAdding] = useState(false)
@@ -100,10 +101,10 @@ export function CaptureCard({ onSaved, onReload }: { onSaved: () => void; onRelo
         value={draft}
         onChangeText={setDraft}
         placeholder="Jot something to remember…"
-        placeholderTextColor={MUTED}
+        placeholderTextColor={tokens.colors.muted}
         multiline
         textAlignVertical="top"
-        className="mb-3 min-h-[64px] rounded-lg border border-slate-300 px-3 py-2 text-slate-900 dark:border-slate-700 dark:text-slate-100"
+        className="mb-3 min-h-[64px] rounded-lg border border-border px-3 py-2 text-fg"
       />
       <Button
         label="Add to memory"
@@ -134,7 +135,7 @@ export function CaptureCard({ onSaved, onReload }: { onSaved: () => void; onRelo
           ● Recording… tap Stop when done
         </Text>
       ) : transcribing ? (
-        <Text className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
+        <Text className="mt-2 text-center text-xs text-muted">
           Transcribing on-device…
           {sttDownloadProgress < 1 ? ` ${Math.round(sttDownloadProgress * 100)}%` : ''}
         </Text>

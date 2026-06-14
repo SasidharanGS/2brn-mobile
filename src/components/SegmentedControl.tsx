@@ -15,7 +15,7 @@ export function SegmentedControl<T extends string>({
   onChange: (v: T) => void
 }) {
   return (
-    <View className="mb-4 flex-row rounded-xl bg-slate-200/70 p-1 dark:bg-slate-800/70">
+    <View className="mb-4 flex-row rounded-xl bg-surface-2 p-1">
       {options.map((opt) => {
         const active = opt.value === value
         return (
@@ -24,11 +24,9 @@ export function SegmentedControl<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(opt.value)}
-            className={`flex-1 items-center rounded-lg py-2 ${active ? 'bg-white dark:bg-slate-700' : ''}`}
+            className={`flex-1 items-center rounded-lg py-2 ${active ? 'bg-surface' : ''}`}
           >
-            <Text
-              className={`text-sm font-medium ${active ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
-            >
+            <Text className={`text-sm font-medium ${active ? 'text-fg' : 'text-muted'}`}>
               {opt.label}
             </Text>
           </Pressable>

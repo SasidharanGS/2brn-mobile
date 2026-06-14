@@ -4,17 +4,15 @@ import { type ReactNode } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { PRIMARY } from '@/theme/colors'
+import { useTheme } from '@/theme/ThemeContext'
 
-/** Lightweight back header for stacked (more/*) screens, themed for dark/light. */
+/** Lightweight back header for stacked (more/*) screens, themed per skin. */
 export function Header({ title, right }: { title: string; right?: ReactNode }) {
   const router = useRouter()
   const insets = useSafeAreaInsets()
+  const { tokens } = useTheme()
   return (
-    <View
-      style={{ paddingTop: insets.top }}
-      className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
-    >
+    <View style={{ paddingTop: insets.top }} className="border-b border-rule bg-bg">
       <View className="h-12 flex-row items-center px-1">
         <Pressable
           accessibilityRole="button"
@@ -22,11 +20,9 @@ export function Header({ title, right }: { title: string; right?: ReactNode }) {
           onPress={() => router.back()}
           className="h-10 w-10 items-center justify-center"
         >
-          <Ionicons name="chevron-back" size={26} color={PRIMARY} />
+          <Ionicons name="chevron-back" size={26} color={tokens.colors.accent} />
         </Pressable>
-        <Text className="flex-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-          {title}
-        </Text>
+        <Text className="flex-1 text-lg font-semibold text-fg">{title}</Text>
         {right ? <View className="pr-2">{right}</View> : null}
       </View>
     </View>
