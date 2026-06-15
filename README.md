@@ -14,6 +14,8 @@ it is never required.
 - 🏷️ **Auto-enrich** *(opt-in)* — the LLM adds a one-line summary and topic tags to new captures
 - 🔗 **Companion** *(optional)* — pair a desktop over the LAN to also browse and sync its
   journal, blog, insights, timeline, and chat
+- 🎨 **Two skins** — switch between **modern** and **minimal** (a monochrome, text-first
+  look), each in light or dark, from Settings
 
 Everything works with **no desktop and no network**. Nothing leaves the phone by default.
 
@@ -81,10 +83,12 @@ a paired daemon.
 
 ## Pairing the optional desktop companion
 
-The desktop daemon is loopback-only and bearer-token-authed. To pair, enable an **opt-in
-LAN mode** on the desktop and scan a **QR code**; the phone stores the URL + token in the
-Android Keystore and talks to the daemon over your home Wi‑Fi. Nothing leaves your network.
-See [`docs/PAIRING.md`](docs/PAIRING.md) and the daemon's
+The desktop daemon is loopback-only by default. To pair, enable an **opt-in LAN mode** on
+the desktop and scan a **QR code**; the desktop mints your phone its **own per-device token**
+(the master token never leaves the desktop), and the phone stores the URL + token in the
+Android Keystore and talks to the daemon over your home Wi‑Fi. You can revoke a phone from the
+desktop at any time — the app then self-heals back to its pairing screen. Nothing leaves your
+network. See [`docs/PAIRING.md`](docs/PAIRING.md) and the daemon's
 [`docs/mobile-bridge.md`](https://github.com/SasidharanGS/2brn/blob/main/docs/mobile-bridge.md).
 
 ## Building an APK
@@ -102,7 +106,7 @@ Android SDK) or a cloud `eas build -p android` (needs an Expo login).
 | On-device ML | `react-native-executorch` — OCR, speech-to-text, embeddings, LLM |
 | Local store | expo-sqlite (memories + vectors) |
 | Search | cosine similarity in JS over on-device embeddings |
-| Styling | NativeWind (Tailwind for RN) |
+| Styling | NativeWind (Tailwind for RN) + a two-skin token system (modern · minimal, each light/dark) |
 | Server state (companion) | TanStack Query |
 | Secure storage | expo-secure-store (Android Keystore) — pairing token |
 | Capture | expo-share-intent · expo-image-picker · expo-audio · expo-camera (QR) |
