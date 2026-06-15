@@ -62,7 +62,7 @@ never loses data or crashes the app.
 | Local store | **expo-sqlite** (WAL) | The memories table *and* the vectors live on the phone; start simple, no native vector DB needed at personal scale. |
 | Vector search | **cosine similarity in JS** | A few hundred–thousand personal notes rank in milliseconds; avoids a native dependency. Revisit (`sqlite-vec` / ObjectBox) only if scale demands it. |
 | Server state (companion) | **TanStack Query** | Caching/retries for the optional desktop endpoints. |
-| Styling | **NativeWind v4** (Tailwind for RN) | Shared design tokens with desktop. |
+| Styling | **NativeWind v4** (Tailwind for RN) + a **two-skin token system** | Two switchable skins (modern + minimal), each light/dark, mirroring the desktop. Colors are injected as CSS variables via NativeWind `vars()` so `bg-bg`/`text-fg` resolve per skin (§4.6). |
 | Secure storage | **expo-secure-store** (Android Keystore) | Stores the pairing token at rest; never in plain files. |
 | Capture | **expo-share-intent · expo-image-picker · expo-audio · expo-camera** | Share-sheet, images (→OCR), voice (→STT), and QR (pairing). |
 | Streaming (companion chat) | **`expo/fetch`** | RN's global `fetch` can't stream a body; `expo/fetch` can, with a buffered fallback. |
@@ -124,12 +124,14 @@ src/
               prompt·enrich·ocrText·audioWaveform) + 4 React contexts (one per model)
   db/         local.ts — expo-sqlite store (memories, embeddings, migrations)
   api/        types.ts · client.ts · sse.ts · mock.ts · queryKeys.ts · queryClient.ts
-  connection/ ConnectionContext.tsx · pairing.ts (parse/validate QR + test)
-  hooks/      queries.ts (TanStack Query wrappers for the companion endpoints)
-  components/ Screen · ui · states · DateBar · SegmentedControl · Markdown · MarkdownDocView · Header
-  settings/   prefs.ts (on-device preferences, e.g. auto-enrich opt-in)
-  theme/      colors.ts (category/state chip tokens, ported from desktop)
-  utils/      date.ts (local-day + UTC-aware time helpers)
+  connection/ ConnectionContext.tsx (self-heals on 401) · pairing.ts (parse/validate QR + test)
+  hooks/      queries.ts (TanStack Query wrappers for the companion endpoints) · useMarkdownDoc.ts
+  components/ Screen · ui · states · AppText (themed inline text) · DateBar · SegmentedControl ·
+              Markdown · MarkdownDocView · Header
+  settings/   prefs.ts (on-device preferences: skin, theme mode, auto-enrich opt-in)
+  theme/      tokens.ts (two-skin token system, §4.6) · ThemeContext.tsx (useTheme) ·
+              colors.ts (category/state chip tokens)
+  utils/      date.ts (local-day + UTC-aware time helpers) · url.ts
 ```
 
 ### 4.2 On-device ML design — pure logic vs. native models
@@ -166,10 +168,15 @@ The desktop daemon is loopback-only and bearer-token-authed, so pairing is **opt
    call, and stores `{baseUrl, token}` in **expo-secure-store**. `useApi()` throws when
    unpaired, so companion screens are type-safe-gated.
 4. **Health:** a lightweight `/status` poll drives a calm "connected / unreachable" banner.
+5. **Revoke self-heal:** the desktop mints **one per-device token per phone** (never the
+   master loopback token), each independently revocable. If a token is revoked, the next
+   authed call returns `401`; `ConnectionContext` catches it (`onUnauthorized → unpair()`)
+   and drops back to the pairing screen — no manual cleanup, no error loop.
 
-**Security posture:** transport is plain HTTP over the LAN; the gate is the per-machine
-bearer token. LAN binding is opt-in/off-by-default. The token lives only in the Keystore-
-backed secure store and is sent only to the paired base URL. Documented future hardening:
+**Security posture:** transport is plain HTTP over the LAN; the gate is a **revocable
+per-device token** (the desktop's master token stays loopback-only and is never sent to the
+phone). LAN binding is opt-in/off-by-default. The token lives only in the Keystore-backed
+secure store and is sent only to the paired base URL. Documented future hardening:
 self-signed TLS + cert pinning, or a relay/Tailscale for off-LAN.
 
 ### 4.5 Streaming chat transport (companion)
@@ -179,22 +186,49 @@ body, so chat uses **`expo/fetch`** (`src/api/sse.ts` `SSEParser` is a unit-test
 incremental parser). If streaming is unavailable it falls back to a buffered read, so chat
 always works.
 
+### 4.6 Theming (two switchable skins)
+
+Mirroring the desktop, the app ships **two skins** — **modern** (the slate/blue look) and
+**minimal** (monochrome, text-first) — each with **light/dark**, switchable in **Settings**.
+
+- **Token source of truth:** `src/theme/tokens.ts` defines `THEME[skin][mode]` — colors,
+  `radiusCard`/`radiusPill`, `fontSans` (minimal = Inter), and a `lowercase` flag. The
+  monochrome **`--ink` intensity ramp (0→4)** is **precomputed to hex** because React Native
+  can't evaluate CSS `color-mix()` at runtime.
+- **Injection:** `ThemeContext.tsx` resolves `system` mode against the OS scheme, then injects
+  the token colors as CSS variables via NativeWind's `vars()`, so Tailwind classes like
+  `bg-bg` / `text-fg` / `border-rule` / `text-ink-3` resolve per skin. `useTheme()` exposes
+  `{ skin, mode, tokens }` for the few raw-value cases (radius, font).
+- **State by intensity, not hue (minimal):** `STATE_INK` maps a productivity state
+  (`deep_work`/`focused` → peak, `idle` → empty) to an ink level, so the minimal skin encodes
+  state by magnitude on the monochrome ramp — never by color.
+- **`AppText` (`src/components/AppText.tsx`):** RN `<Text>` doesn't inherit `fontFamily` /
+  `textTransform` from a parent, so inline chrome labels are routed through `AppText`, which
+  applies the active skin's font, casing (minimal = lowercase), and 300/400 weight. Data
+  strings (URLs, model names) pass `preserveCase`; user/prose/message content is never
+  lowercased.
+- **Persistence:** the chosen skin + theme mode live in `src/settings/prefs.ts`
+  (expo-secure-store), so the choice survives restarts.
+
 ## 5. Desktop bridge (already merged, opt-in)
 
 The daemon-side support for the optional companion was added **additively and is merged into
 the desktop's `main`** (off by default — zero behavior change unless `lan_access` is
 enabled): `lan_access` config + `0.0.0.0` bind; `GET /connection-info`; `POST/GET/DELETE
 /ingest/note(s)` (embed shared notes into ChromaDB `note_memories` + a `shared_notes` table,
-degrading gracefully when embeddings are offline); `lan_access` surfaced in `/settings`; and a
-terminal pairing helper (`python -m brn_daemon.pair`). Native RN clients send no browser
-`Origin`, so CORS is unaffected; the bearer token is the gate.
+degrading gracefully when embeddings are offline); `lan_access` surfaced in `/settings`;
+**per-device tokens** via `POST/GET/DELETE /devices` (one hash-only token per phone, mint +
+list + revoke); and pairing from either the desktop's **Connect a device** screen or the
+terminal helper (`python -m brn_daemon.pair`). The master token is accepted only on loopback;
+LAN phones present a device token, and `/devices` is loopback + master only. Native RN clients
+send no browser `Origin`, so CORS is unaffected; the token is the gate.
 
 ## 6. Feature scope
 
 **On-device (the primary experience):** capture (note · share sheet · image→OCR · voice→STT),
 on-device embeddings + semantic search, grounded LLM answers (on-device RAG), opt-in
-auto-enrich (summary + tags), local SQLite store, dark/light theming, loading/empty/error
-states.
+auto-enrich (summary + tags), local SQLite store, two switchable skins (modern + minimal,
+each light/dark — §4.6), loading/empty/error states.
 
 **Companion (optional, when paired):** Home/status, streaming Chat, Journal (read +
 regenerate), Blog (read), Insights (day/week/month), Timeline (read-only), Instructions
@@ -202,8 +236,8 @@ regenerate), Blog (read), Insights (day/week/month), Timeline (read-only), Instr
 Share-to-2brn sync.
 
 **Deferred / not built:** two-way memory sync between phone and desktop (Phase 3 — see
-[`PHASE-3.md`](./PHASE-3.md)); a desktop "Connect a phone" QR panel (the terminal helper
-covers pairing); iOS.
+[`PHASE-3.md`](./PHASE-3.md)); iOS. *(The desktop's "Connect a device" QR panel — once
+deferred — now ships, with per-device tokens you can revoke.)*
 
 ## 7. Quality, testing & build
 

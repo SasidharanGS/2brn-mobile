@@ -6,7 +6,7 @@
 > [`PARITY.md`](./PARITY.md) for the on-device strategy, and the per-phase plans
 > [`PHASE-0.md`](./PHASE-0.md)–[`PHASE-3.md`](./PHASE-3.md).
 
-**Legend:** ⬜ not started · 🟦 in progress · ✅ done · 📵 built, pending physical-device verification
+**Legend:** ⬜ not started · 🟦 in progress · ✅ done
 
 ---
 

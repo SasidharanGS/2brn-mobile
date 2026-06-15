@@ -177,9 +177,9 @@ capture target**; mock mode.
 
 | Feature | Desktop | Mobile (today) | On-device feasible? | Target |
 |---|:---:|:---:|---|---|
-| Chat (RAG, streaming) | ✅ | ✅ | **Yes** — on-device retrieval + answers from the local **Gemma** LLM | P2–P3 (on-device) |
-| Journal (view/gen/edit) | ✅ | ✅ | **Yes** — view now; generation via on-device Gemma | P3 |
-| Blog (view/gen/edit) | ✅ | ✅ | **Yes** — same as journal (on-device Gemma) | P3 |
+| Chat (RAG, streaming) | ✅ | ✅ | **Yes** — on-device retrieval + answers from the local **Llama 3.2 1B (SpinQuant)** LLM | P2–P3 (on-device) |
+| Journal (view/gen/edit) | ✅ | ✅ | **Yes** — view now; generation via the on-device Llama 3.2 1B | P3 |
+| Blog (view/gen/edit) | ✅ | ✅ | **Yes** — same as journal (on-device Llama 3.2 1B) | P3 |
 | Timeline + override | ✅ | ✅ | Yes (over local cache) | P0 |
 | Insights dashboards | ✅ | ✅ | Yes (compute over local cache) | P0/P3 |
 | Instructions CRUD | ✅ | ✅ | Yes | P0 |
@@ -196,7 +196,7 @@ capture target**; mock mode.
 | **Continuous all-app screen capture** | ✅ (mss, every 60s) | — | **No (public app)** — MediaProjection forces consent dialog + persistent cast indicator + per-session re-consent; AccessibilityService is a Play **ban risk**; screen recording = sensitive data. _Personal sideloaded build only._ | sideloaded "personal mode" only |
 | Mobile-native capture (notifications, share-sheet, foreground-app/usage, manual shots, voice) | — (can't see phone) | ◑ share-sheet only | **Yes** — this is what the phone *uniquely* can capture | **P1** |
 | **OCR** | ✅ Tesseract | — | **Yes** — **ML Kit Text Recognition v2** (free, offline, ≥ Tesseract accuracy) | P1 |
-| **AI inference** (summary/tags/category) | ✅ litellm | — | **Yes on the OnePlus 15** — bundle **Gemma 3** (MediaPipe / `llama.rn`) for short tag/summarize/answer; **on-device only, no offload** (decided) | P2 |
+| **AI inference** (summary/tags/category) | ✅ litellm | ✅ | **Yes on the OnePlus 15** — **Llama 3.2 1B (SpinQuant)** via `react-native-executorch` for short tag/summarize/answer; **on-device only, no offload** (decided & built, P2) | P2 |
 | **Embeddings** | ✅ configurable | — | **Yes** — BGE/GTE via **ONNX Runtime Mobile** | P0 |
 | **Vector store / RAG index** | ✅ ChromaDB | — | **Yes** — start simple (**expo-sqlite** + JS cosine), grow into **ObjectBox** / **sqlite-vec** for scale. (ChromaDB itself ≠ mobile) | P0 |
 | **Scheduled generation** (journal/blog crons) | ✅ APScheduler (60s/daily) | — | **Partial** — **WorkManager** reliable at **≥15 min**, not 60s; true 60s needs a foreground service | P2/P3 |
